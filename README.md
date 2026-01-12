@@ -4,12 +4,13 @@
 
 - Python
 - Virtualenv
+- 1Password Beta
+- 1Password CLI
 
 ## Get started
 
-Right now this just has a small lil inventory of the proxmox server to configure. To test it:
-
 ```
 source venv/bin/activate
-ansible hosts -m ping -i inventory.yml
+op signin
+ansible-playbook playbook.yml --ask-vault-pass
 ```
