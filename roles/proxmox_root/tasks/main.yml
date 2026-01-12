@@ -1,0 +1,63 @@
+---
+#### TODO: uncomment after primary development
+# vars_prompt:
+#   - name: logged_into_onepassword
+#     prompt: |
+
+#       ---------------
+
+#       Have you run <op signin> in the terminal? (y/N)
+#             (Anything other than "y" will cancel the run)
+
+#       ---------------
+#     private: false
+#     default: "n"
+
+#### TODO: uncomment after primary development
+# - name: End the playbook if not logged into 1Password
+#   ansible.builtin.meta: end_host
+#   when:
+#     - logged_into_onepassword != "y"
+- name: Remove enterprise repos
+  block:
+    - name: Ceph repo
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/ceph.sources
+        state: absent
+    - name: PVE Enterprise repo
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/pve-enterprise.sources
+        state: absent
+    - name: No Subscription repo
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/proxmox.sources
+        mode: "0600"
+        content: |
+          Types: deb
+          URIs: http://download.proxmox.com/debian/pve
+          Suites: trixie
+          Components: pve-no-subscription
+          Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+    - name: Package update
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: "yes"
+- name: Ensure pip is installed
+  ansible.builtin.apt:
+    package: python3-pip
+    update_cache: true
+- name: Ensure proxmoxer is installed
+  ansible.builtin.apt:
+    package: python3-proxmoxer
+    update_cache: true
+- name: Proxmox actions
+  block:
+    - name: Get existing nodes
+      community.proxmox.proxmox_node_info:
+        api_host: "{{ api_hostname }}"
+        api_user: "{{ root_api_user }}"
+        api_password: "{{ root_api_password }}"
+      register: proxmox_nodes
+    - name: List existing nodes
+      ansible.builtin.debug:
+        msg: "{{ proxmox_nodes }}"
