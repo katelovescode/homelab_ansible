@@ -12,5 +12,5 @@
 ```
 source venv/bin/activate
 op signin
-ansible-playbook playbook.yml --ask-vault-pass
+ansible-playbook playbook.yml
 ```

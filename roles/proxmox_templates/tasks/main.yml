@@ -1,0 +1,13 @@
+---
+- name: Install templates
+  block:
+    - name: Debian 13
+      community.proxmox.proxmox_template:
+        api_host: "{{ ansible_host }}"
+        api_user: "{{ admin_api_user }}"
+        api_password: "{{ admin_api_password }}"
+        content_type: vztmpl
+        node: "{{ api_hostname }}"
+        state: present
+        storage: "{{ vm_ct_iso_vztmpl_storage }}"
+        url: "{{ debian_13_vztmpl_url }}"

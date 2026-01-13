@@ -1,2 +1,9 @@
 api_hostname: enterprise
+api_port: 8006
 root_api_user: root@pam
+admin_api_user: "{{ admin_username + '@' + admin_authentication_realm }}"
+admin_firstname: Kate
+vm_ct_iso_vztmpl_storage: local
+vm_ct_disk_storage: local-lvm
+debian_13_vztmpl_url: "http://download.proxmox.com/images/system/debian-13-standard_13.1-2_amd64.tar.zst"
+debian_13_vztmpl_filename: "{{ (debian_13_vztmpl_url | split('/'))[-1] }}"

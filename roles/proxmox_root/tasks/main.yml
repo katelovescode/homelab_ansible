@@ -1,23 +1,4 @@
 ---
-#### TODO: uncomment after primary development
-# vars_prompt:
-#   - name: logged_into_onepassword
-#     prompt: |
-
-#       ---------------
-
-#       Have you run <op signin> in the terminal? (y/N)
-#             (Anything other than "y" will cancel the run)
-
-#       ---------------
-#     private: false
-#     default: "n"
-
-#### TODO: uncomment after primary development
-# - name: End the playbook if not logged into 1Password
-#   ansible.builtin.meta: end_host
-#   when:
-#     - logged_into_onepassword != "y"
 - name: Remove enterprise repos
   block:
     - name: Ceph repo
@@ -41,10 +22,14 @@
     - name: Package update
       ansible.builtin.apt:
         update_cache: true
-        upgrade: "yes"
+        upgrade: "dist"
 - name: Ensure pip is installed
   ansible.builtin.apt:
     package: python3-pip
+    update_cache: true
+- name: Ensure vim is installed
+  ansible.builtin.apt:
+    package: vim
     update_cache: true
 - name: Ensure proxmoxer is installed
   ansible.builtin.apt:
@@ -52,12 +37,37 @@
     update_cache: true
 - name: Proxmox actions
   block:
-    - name: Get existing nodes
-      community.proxmox.proxmox_node_info:
-        api_host: "{{ api_hostname }}"
-        api_user: "{{ root_api_user }}"
-        api_password: "{{ root_api_password }}"
-      register: proxmox_nodes
-    - name: List existing nodes
-      ansible.builtin.debug:
-        msg: "{{ proxmox_nodes }}"
+    - name: Set up admin user
+      block:
+        - name: Create linux user for admin
+          ansible.builtin.user:
+            name: "{{ admin_username }}"
+            password: "{{ admin_password }}"
+            group: sudo
+            shell: /bin/bash
+          register: linux_user_step
+        - name: Add SSH key for admin user
+          ansible.posix.authorized_key:
+            user: "{{ admin_username }}"
+            key: "{{ admin_public_key }}"
+        - name: Configure admin user in Proxmox
+          community.proxmox.proxmox_user:
+            api_host: "{{ ansible_host }}"
+            api_user: "{{ root_api_user }}"
+            api_password: "{{ root_api_password }}"
+            comment: Managed by Ansible
+            email: "{{ admin_email }}"
+            firstname: "{{ admin_firstname }}"
+            enable: true
+            userid: "{{ admin_username + '@' + admin_authentication_realm }}"
+        - name: Add admin permissions
+          community.proxmox.proxmox_access_acl:
+            api_host: "{{ ansible_host }}"
+            api_user: "{{ root_api_user }}"
+            api_password: "{{ root_api_password }}"
+            path: /
+            type: user
+            state: present
+            ugid: "{{ admin_username + '@' + admin_authentication_realm }}"
+            roleid: Administrator
+            propagate: true
