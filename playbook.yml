@@ -1,38 +1,15 @@
-- name: Proxmox repository, package, and user tasks
-  hosts: enterprise
-  remote_user: root
+- name: Ansible on all hosts
+  hosts: all
+  gather_facts: false
   roles:
-    - proxmox_root
+    - ansible_user
+  handlers:
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
 
-- name: Proxmox container, vm configuration
+- name: Proxmox node, cluster and VM management
   hosts: enterprise
   roles:
-    - proxmox_templates
-    - proxmox_andromeda_pihole_container
-
-  #### TODO: uncomment after primary development
-  # vars_prompt:
-  #   - name: logged_into_onepassword
-  #     prompt: |
-
-  #       ---------------
-
-  #       Have you run <op signin> in the terminal? (y/N)
-  #             (Anything other than "y" will cancel the run)
-
-  #       ---------------
-  #     private: false
-  #     default: "n"
-
-  # tasks:
-  # ### TODO: uncomment after primary development
-  #   - name: End the playbook if not logged into 1Password
-  #     ansible.builtin.meta: end_play
-  #     when:
-  #       - logged_into_onepassword != "y"
-  # - name: Import Proxmox Root Role
-  #   ansible.builtin.import_role:
-  #     name: proxmox_root
-  # - name: Import Proxmox Admin Role
-  #   ansible.builtin.import_role:
-  #     name: proxmox_admin
+    - proxmox
