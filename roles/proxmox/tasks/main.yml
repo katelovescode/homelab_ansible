@@ -18,3 +18,9 @@
 - name: Install templates for containers
   ansible.builtin.import_tasks:
     file: install_templates.yml
+- name: Create HomeAssistant service account
+  ansible.builtin.import_tasks:
+    file: homeassistant_service.yml
+- name: Create Homepage service account
+  ansible.builtin.import_tasks:
+    file: homepage_service.yml

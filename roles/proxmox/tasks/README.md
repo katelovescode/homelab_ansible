@@ -1,5 +1,11 @@
 # Proxmox Tasks
 
+Uses community proxmox module and a local copy of the `proxmox_pveum.py` script from [https://github.com/pazuzu-dev/proxmox_pveum](Proxmox PVEUM Module). I only did this this way to avoid having to use git submodules
+
+## 1Password
+
+A service account token for Ansible is configured in the .envrc for this repository. `direnv allow .` is required for loading in ENV vars, and once it's loaded 1Password should not ask for TouchID confirmation except at the beginning of the run for SSH connection
+
 ## A Note on Users
 
 The tasks run on these hosts will create and configure several node and cluster attributes, and it may be a little confusing to understand which user is doing what. For clarity, here's the order of operations on a Proxmox node (after `ansible_user` role is run on all hosts in the playbook):
@@ -24,3 +30,5 @@ We don't have to document every step but essentially, any time we're interacting
 
 - Add `ansible` user to the Proxmox API users
 - Change authentication for the API to use token or ticket auth
+- Add service account token permissions for SSH key to avoid TouchID auth at the beginning
+- 1Password Connect server

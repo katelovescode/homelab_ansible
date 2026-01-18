@@ -1,1 +1,2 @@
 andromeda_ansible_host: "{{ ansible_host }}"
+root_user: kate

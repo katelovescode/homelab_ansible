@@ -5,6 +5,7 @@
     - ansible_user
   handlers:
     - name: Restart sshd
+      remote_user: ansible
       ansible.builtin.service:
         name: sshd
         state: restarted
@@ -13,3 +14,55 @@
   hosts: enterprise
   roles:
     - proxmox
+# - name: Delete and start over pvesh
+#   hosts: enterprise
+#   tasks:
+#     - name: remove pvesh
+#       become: true
+#       ansible.builtin.command:
+#         cmd: "pvesh delete /access/users/homepage@pve/token/homepage_token"
+# - name: Test pvesh command
+#   hosts: enterprise
+#   tasks:
+#     - name: pvesh get
+#       become: true
+#       ansible.builtin.command:
+#         cmd: "pvesh create /access/users/homepage@pve/token/homepage_token --comment='Managed by Ansible' --output-format=json"
+#       register: proxmox_homepage_user_token
+#     - name: Debug pvesh
+#       ansible.builtin.debug:
+#         msg: "{{ proxmox_homepage_user_token_value }}"
+#       vars:
+#         proxmox_homepage_user_token_json: "{{ proxmox_homepage_user_token.stdout | ansible.builtin.from_json }}"
+#         proxmox_homepage_user_token_id: "{{ proxmox_homepage_user_token_json['full-tokenid'] }}"
+#         proxmox_homepage_user_token_value: "{{ proxmox_homepage_user_token_json.value }}"
+# - name: Raspberry Pi 4 setup
+#   hosts: andromeda
+#   roles:
+#     - andromeda
+#### TODO: uncomment after primary development
+# vars_prompt:
+#   - name: logged_into_onepassword
+#     prompt: |
+
+#       ---------------
+
+#       Have you run <op signin> in the terminal? (y/N)
+#             (Anything other than "y" will cancel the run)
+
+#       ---------------
+#     private: false
+#     default: "n"
+
+# tasks:
+# ### TODO: uncomment after primary development
+#   - name: End the playbook if not logged into 1Password
+#     ansible.builtin.meta: end_play
+#     when:
+#       - logged_into_onepassword != "y"
+# - name: Import Proxmox Root Role
+#   ansible.builtin.import_role:
+#     name: proxmox_root
+# - name: Import Proxmox Admin Role
+#   ansible.builtin.import_role:
+#     name: proxmox_admin

@@ -6,13 +6,12 @@
     password: "{{ proxmox_admin_hashed_password }}"
     group: sudo
     shell: /bin/bash
-  register: linux_user_step
 - name: Add SSH key for admin user
   become: true
   ansible.posix.authorized_key:
     user: "{{ proxmox_admin_username }}"
     key: "{{ proxmox_ansible_public_key }}"
-- name: Configure admin user in Proxmox
+- name: Configure admin user
   community.proxmox.proxmox_user:
     api_host: "{{ proxmox_ansible_host }}"
     api_user: "root@pam"
