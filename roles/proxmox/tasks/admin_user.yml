@@ -13,7 +13,7 @@
     key: "{{ proxmox_ansible_public_key }}"
 - name: Configure admin user
   community.proxmox.proxmox_user:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "root@pam"
     api_password: "{{ proxmox_root_password }}"
     comment: Managed by Ansible
@@ -23,7 +23,7 @@
     userid: "{{ proxmox_admin_api_user }}"
 - name: Add admin permissions
   community.proxmox.proxmox_access_acl:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "root@pam"
     api_password: "{{ proxmox_root_password }}"
     path: /

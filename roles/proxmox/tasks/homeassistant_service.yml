@@ -1,7 +1,7 @@
 ---
 - name: Create HomeAssistant audit role
   proxmox_pveum:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     roleid: "{{ proxmox_homeassistant_audit_role }}"
@@ -9,7 +9,7 @@
     state: present
 - name: Create HomeAssistant update role
   proxmox_pveum:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     roleid: "{{ proxmox_homeassistant_update_role }}"
@@ -17,7 +17,7 @@
     state: present
 - name: Create HomeAssistant node power management role
   proxmox_pveum:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     roleid: "{{ proxmox_homeassistant_node_power_mgmt_role }}"
@@ -25,7 +25,7 @@
     state: present
 - name: Create HomeAssistant VM power management role
   proxmox_pveum:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     roleid: "{{ proxmox_homeassistant_vm_power_mgmt_role }}"
@@ -33,7 +33,7 @@
     state: present
 - name: Configure HomeAssistant group
   community.proxmox.proxmox_group:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     comment: Managed by Ansible
@@ -42,7 +42,7 @@
   register: proxmox_homeassistant_group
 - name: Configure HomeAssistant user
   community.proxmox.proxmox_user:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     comment: Managed by Ansible
@@ -54,7 +54,7 @@
   register: proxmox_homeassistant_user
 - name: Add HomeAssistant audit group permissions
   community.proxmox.proxmox_access_acl:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     path: /
@@ -65,7 +65,7 @@
     propagate: true
 - name: Add HomeAssistant update group permissions
   community.proxmox.proxmox_access_acl:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     path: /
@@ -76,7 +76,7 @@
     propagate: true
 - name: Add HomeAssistant node power management group permissions
   community.proxmox.proxmox_access_acl:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     path: /
@@ -87,7 +87,7 @@
     propagate: true
 - name: Add HomeAssistant VM power management group permissions
   community.proxmox.proxmox_access_acl:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     path: /
@@ -100,12 +100,12 @@
   block:
     - name: Read HomeAssistant user info
       community.proxmox.proxmox_user_info:
-        api_host: "{{ proxmox_ansible_host }}"
+        api_host: "{{ proxmox_node_ip }}"
         api_user: "{{ proxmox_admin_api_user }}"
         api_password: "{{ proxmox_admin_password }}"
         userid: "{{ proxmox_homeassistant_user.userid }}"
       register: proxmox_homeassistant_user_info
-    - name: Create if homeassistant user token doesn't exist
+    - name: Create HomeAssistant user token if one doesn't exist
       become: true
       ansible.builtin.command:
         cmd: "pvesh create /access/users/{{ proxmox_homeassistant_user.userid }}/token/homeassistant_token --comment='Managed by Ansible' --output-format=json"
@@ -116,6 +116,7 @@
 - name: Store HomeAssistant token in 1Password
   block:
     - name: List all items
+      check_mode: false
       ansible.builtin.command:
         cmd: op item list
       register: op_items

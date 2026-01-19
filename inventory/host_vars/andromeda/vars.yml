@@ -1,2 +1,2 @@
-andromeda_ansible_host: "{{ ansible_host }}"
+hostname: andromeda
 root_user: kate

@@ -1,2 +1,2 @@
-proxmox_api_hostname: enterprise
+proxmox_node_hostname: enterprise
 root_user: root

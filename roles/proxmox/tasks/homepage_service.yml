@@ -1,7 +1,7 @@
 ---
 - name: Create Homepage audit role
   proxmox_pveum:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     roleid: "{{ proxmox_homepage_audit_role }}"
@@ -9,7 +9,7 @@
     state: present
 - name: Create Homepage power management role
   proxmox_pveum:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     roleid: "{{ proxmox_homepage_power_mgmt_role }}"
@@ -17,7 +17,7 @@
     state: present
 - name: Configure Homepage group
   community.proxmox.proxmox_group:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     comment: Managed by Ansible
@@ -26,7 +26,7 @@
   register: proxmox_homepage_group
 - name: Configure Homepage user
   community.proxmox.proxmox_user:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     comment: Managed by Ansible
@@ -38,7 +38,7 @@
   register: proxmox_homepage_user
 - name: Add Homepage audit group permissions
   community.proxmox.proxmox_access_acl:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     path: /
@@ -49,7 +49,7 @@
     propagate: true
 - name: Add Homepage power management group permissions
   community.proxmox.proxmox_access_acl:
-    api_host: "{{ proxmox_ansible_host }}"
+    api_host: "{{ proxmox_node_ip }}"
     api_user: "{{ proxmox_admin_api_user }}"
     api_password: "{{ proxmox_admin_password }}"
     path: /
@@ -62,12 +62,12 @@
   block:
     - name: Read Homepage user info
       community.proxmox.proxmox_user_info:
-        api_host: "{{ proxmox_ansible_host }}"
+        api_host: "{{ proxmox_node_ip }}"
         api_user: "{{ proxmox_admin_api_user }}"
         api_password: "{{ proxmox_admin_password }}"
         userid: "{{ proxmox_homepage_user.userid }}"
       register: proxmox_homepage_user_info
-    - name: Create if homepage user token doesn't exist
+    - name: Create Homepage user token if one doesn't exist
       become: true
       ansible.builtin.command:
         cmd: "pvesh create /access/users/{{ proxmox_homepage_user.userid }}/token/homepage_token --comment='Managed by Ansible' --output-format=json"
@@ -78,6 +78,7 @@
 - name: Store Homepage token in 1Password if one doesn't exist
   block:
     - name: List all items
+      check_mode: false
       ansible.builtin.command:
         cmd: op item list
       register: op_items
