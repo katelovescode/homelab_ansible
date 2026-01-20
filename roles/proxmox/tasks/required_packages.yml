@@ -1,0 +1,11 @@
+---
+- name: Ensure pip is installed
+  become: true
+  ansible.builtin.apt:
+    package: python3-pip
+    update_cache: true
+- name: Ensure proxmoxer is installed
+  become: true
+  ansible.builtin.apt:
+    package: python3-proxmoxer
+    update_cache: true

@@ -1,0 +1,6 @@
+proxmox_homeassistant_audit_role: "HomeAssistant.Audit"
+proxmox_homeassistant_update_role: "HomeAssistant.Update"
+proxmox_homeassistant_node_power_mgmt_role: "HomeAssistant.NodePowerMgmt"
+proxmox_homeassistant_vm_power_mgmt_role: "HomeAssistant.VMPowerMgmt"
+proxmox_homepage_audit_role: "Homepage.Audit"
+proxmox_homepage_power_mgmt_role: "Homepage.PowerMgmt"

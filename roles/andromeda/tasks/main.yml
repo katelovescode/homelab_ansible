@@ -1,0 +1,14 @@
+---
+# Touchscreen should work out of the box with no changes
+- name: Turn on VNC access
+  ansible.builtin.command:
+    cmd: "sudo raspi-config nonint do_vnc 0"
+# - name: Copy configuration file for touchkio
+#   ansible.builtin.copy:
+#     src: ../files/Arguments.json
+#     dest: /home/ansible/.config/touchkio/Arguments.json
+#     mode: "0644"
+# - name: Install touchkio in update mode to skip prompts
+#   ansible.builtin.command: bash <(wget -qO- https://raw.githubusercontent.com/leukipp/touchkio/main/install.sh) update
+# - name: Start touchkio
+#   ansible.builtin.command: touchkio --web-url=https://homeassistant.510forward.space --mqtt-url=https://192.168.30.133:1883 --mqtt-user=

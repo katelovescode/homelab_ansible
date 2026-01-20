@@ -1,0 +1,32 @@
+---
+- name: Ensure sudo is installed
+  remote_user: root
+  ansible.builtin.apt:
+    package: sudo
+- name: Handle enterprise and no-subscription repository
+  ansible.builtin.import_tasks:
+    file: enterprise_repos.yml
+- name: Required packages
+  ansible.builtin.import_tasks:
+    file: required_packages.yml
+- name: Debian favorite packages
+  ansible.builtin.import_tasks:
+    file: ../../debian/tasks/main.yml
+- name: Create admin user
+  ansible.builtin.import_tasks:
+    file: admin_user.yml
+- name: Install templates for containers
+  ansible.builtin.import_tasks:
+    file: install_templates.yml
+- name: Create HomeAssistant service account
+  ansible.builtin.import_tasks:
+    file: homeassistant_service.yml
+- name: Create Homepage service account
+  ansible.builtin.import_tasks:
+    file: homepage_service.yml
+- name: Network Configuration
+  ansible.builtin.import_tasks:
+    file: network.yml
+- name: Storage Configuration
+  ansible.builtin.import_tasks:
+    file: storage.yml

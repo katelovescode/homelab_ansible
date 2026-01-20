@@ -1,65 +1,74 @@
-- name: Proxmox Configuration
-  hosts: hypervisors
-  remote_user: root
-  #### TODO: uncomment after primary development
-  # vars_prompt:
-  #   - name: logged_into_onepassword
-  #     prompt: |
+- name: Ansible on all hosts
+  hosts: all
+  gather_facts: false
+  roles:
+    - ansible_user
+  handlers:
+    - name: Restart sshd
+      become: true
+      ansible.builtin.command: service ssh restart
 
-  #       ---------------
+- name: Packages for Debian devices
+  hosts: debian_based
+  roles:
+    - debian
 
-  #       Have you run <op signin> in the terminal? (y/N)
-  #             (Anything other than "y" will cancel the run)
+- name: Proxmox node, cluster and VM management
+  hosts: enterprise
+  roles:
+    - proxmox
 
-  #       ---------------
-  #     private: false
-  #     default: "n"
+- name: Andromeda Raspberry Pi setup
+  hosts: andromeda
+  roles:
+    - andromeda
+#   tasks:
+#     - name: remove pvesh
+#       become: true
+#       ansible.builtin.command:
+#         cmd: "pvesh delete /access/users/homepage@pve/token/homepage_token"
+# - name: Test pvesh command
+#   hosts: enterprise
+#   tasks:
+#     - name: pvesh get
+#       become: true
+#       ansible.builtin.command:
+#         cmd: "pvesh create /access/users/homepage@pve/token/homepage_token --comment='Managed by Ansible' --output-format=json"
+#       register: proxmox_homepage_user_token
+#     - name: Debug pvesh
+#       ansible.builtin.debug:
+#         msg: "{{ proxmox_homepage_user_token_value }}"
+#       vars:
+#         proxmox_homepage_user_token_json: "{{ proxmox_homepage_user_token.stdout | ansible.builtin.from_json }}"
+#         proxmox_homepage_user_token_id: "{{ proxmox_homepage_user_token_json['full-tokenid'] }}"
+#         proxmox_homepage_user_token_value: "{{ proxmox_homepage_user_token_json.value }}"
+# - name: Raspberry Pi 4 setup
+#   hosts: andromeda
+#   roles:
+#     - andromeda
+#### TODO: uncomment after primary development
+# vars_prompt:
+#   - name: logged_into_onepassword
+#     prompt: |
 
-  tasks:
-    #### TODO: uncomment after primary development
-    # - name: End the playbook if not logged into 1Password
-    #   ansible.builtin.meta: end_host
-    #   when:
-    #     - logged_into_onepassword != "y"
-    - name: Remove enterprise repos
-      block:
-        - name: Ceph repo
-          ansible.builtin.file:
-            path: /etc/apt/sources.list.d/ceph.sources
-            state: absent
-        - name: PVE Enterprise repo
-          ansible.builtin.file:
-            path: /etc/apt/sources.list.d/pve-enterprise.sources
-            state: absent
-        - name: No Subscription repo
-          ansible.builtin.copy:
-            dest: /etc/apt/sources.list.d/proxmox.sources
-            content: |
-              Types: deb
-              URIs: http://download.proxmox.com/debian/pve
-              Suites: trixie
-              Components: pve-no-subscription
-              Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
-        - name: Package update
-          ansible.builtin.command:
-            cmd: apt update
-        - name: Package upgrade
-          ansible.builtin.command:
-            cmd: apt upgrade -y
-    - name: Ensure pip is installed
-      ansible.builtin.apt:
-        package: python3-pip
-        update_cache: true
-    - name: Ensure proxmoxer is installed
-      ansible.builtin.apt:
-        package: python3-proxmoxer
-        update_cache: true
-    - name: List existing nodes
-      community.proxmox.proxmox_node_info:
-        api_host: enterprise
-        api_user: root@pam
-        api_password: "{{ lookup('community.general.onepassword', 'Proxmox Root User') }}"
-      register: proxmox_nodes
-    - name: Debug a password (for example)
-      ansible.builtin.debug:
-        msg: "{{ proxmox_nodes }}"
+#       ---------------
+
+#       Have you run <op signin> in the terminal? (y/N)
+#             (Anything other than "y" will cancel the run)
+
+#       ---------------
+#     private: false
+#     default: "n"
+
+# tasks:
+# ### TODO: uncomment after primary development
+#   - name: End the playbook if not logged into 1Password
+#     ansible.builtin.meta: end_play
+#     when:
+#       - logged_into_onepassword != "y"
+# - name: Import Proxmox Root Role
+#   ansible.builtin.import_role:
+#     name: proxmox_root
+# - name: Import Proxmox Admin Role
+#   ansible.builtin.import_role:
+#     name: proxmox_admin

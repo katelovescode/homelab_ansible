@@ -1,0 +1,34 @@
+---
+- name: Bridge
+  community.proxmox.proxmox_node_network:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "{{ proxmox_admin_api_user }}"
+    api_password: "{{ proxmox_admin_password }}"
+    node: "{{ proxmox_node_hostname }}"
+    state: present
+    autostart: true
+    cidr: "{{ proxmox_node_ip }}/24"
+    bridge_ports: "enp3s0"
+    iface_type: "bridge"
+    gateway: "{{ proxmox_gateway }}"
+    iface: "vmbr0"
+- name: Ethernet (wired)
+  community.proxmox.proxmox_node_network:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "{{ proxmox_admin_api_user }}"
+    api_password: "{{ proxmox_admin_password }}"
+    node: "{{ proxmox_node_hostname }}"
+    state: present
+    autostart: true
+    iface_type: "eth"
+    iface: "enp3s0"
+- name: Ethernet (wireless)
+  community.proxmox.proxmox_node_network:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "{{ proxmox_admin_api_user }}"
+    api_password: "{{ proxmox_admin_password }}"
+    node: "{{ proxmox_node_hostname }}"
+    state: present
+    autostart: true
+    iface_type: "eth"
+    iface: "wlp1s0"
