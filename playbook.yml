@@ -5,17 +5,23 @@
     - ansible_user
   handlers:
     - name: Restart sshd
-      remote_user: ansible
-      ansible.builtin.service:
-        name: sshd
-        state: restarted
+      become: true
+      ansible.builtin.command: service ssh restart
+
+- name: Packages for Debian devices
+  hosts: debian_based
+  roles:
+    - debian
 
 - name: Proxmox node, cluster and VM management
   hosts: enterprise
   roles:
     - proxmox
-# - name: Delete and start over pvesh
-#   hosts: enterprise
+
+- name: Andromeda Raspberry Pi setup
+  hosts: andromeda
+  roles:
+    - andromeda
 #   tasks:
 #     - name: remove pvesh
 #       become: true
