@@ -1,3 +1,16 @@
 hypervisors:
   hosts:
     enterprise:
+
+devices:
+  hosts:
+    andromeda:
+
+debian_based:
+  hosts:
+    enterprise:
+    andromeda:
+
+proxmox_nodes:
+  hosts:
+    enterprise:

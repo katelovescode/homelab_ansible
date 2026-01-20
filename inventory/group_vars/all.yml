@@ -1,0 +1,2 @@
+ansible_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL668QvqA1W8UhzAPYysO8i/BLvONM9W4tYgvJ2OBJHG kate@510forward.space"
+trusted_gateway: 192.168.30.1

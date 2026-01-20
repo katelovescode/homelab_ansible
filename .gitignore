@@ -1,1 +1,6 @@
-**/secrets.yaml
+**/secrets.yml
+**/secrets/*
+!**/secrets/README.md
+
+**/.envrc
+__pycache__

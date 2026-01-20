@@ -1,0 +1,36 @@
+---
+- name: Storage configs
+  block:
+    # No way to set lvmthin yet with this module
+    # - name: Root storage
+    #   community.proxmox.proxmox_storage:
+    #     api_host: "{{ proxmox_node_ip }}"
+    #     api_user: "{{ proxmox_admin_api_user }}"
+    #     api_password: "{{ proxmox_admin_password }}"
+    #     nodes:
+    #       - "{{ proxmox_node_hostname }}"
+    #     state: present
+    #     name: "local-lvm"
+    #     content:
+    #       - images
+    #       - rootdir
+    #     type: lvmthin
+    #     thinpool: data
+    #     vgname: pve
+    - name: Templates, ISO, backups
+      community.proxmox.proxmox_storage:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "{{ proxmox_admin_api_user }}"
+        api_password: "{{ proxmox_admin_password }}"
+        nodes:
+          - "{{ proxmox_node_hostname }}"
+        state: present
+        name: "local-lvm"
+        content:
+          - import
+          - vztmpl
+          - backup
+          - iso
+        type: dir
+        dir_options:
+          path: "/var/lib/vz"

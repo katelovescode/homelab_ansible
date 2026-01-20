@@ -1,0 +1,45 @@
+---
+- name: Enable ansible user authentication
+  remote_user: "{{ root_user }}"
+  become: true
+  block:
+    - name: Create ansible user
+      ansible.builtin.user:
+        name: ansible
+        uid: 10001
+    - name: Grant ansible password-less sudo
+      ansible.builtin.copy:
+        src: files/sudoers
+        dest: /etc/sudoers.d/ansible
+        mode: "0600"
+    - name: Authorize SSH key for ansible user
+      ansible.posix.authorized_key:
+        user: ansible
+        key: "{{ ansible_public_key }}"
+        state: present
+
+- name: Secure SSH on non-hypervisor nodes
+  when: ("hypervisors" not in group_names)
+  block:
+    - name: Lock root user password
+      ansible.builtin.user:
+        name: root
+        password: "!"
+    - name: Remove all SSH keys from root user
+      ansible.builtin.file:
+        path: /root/.ssh/authorized_keys
+        state: absent
+    - name: Disable password authentication
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regex: "^(# *)?PasswordAuthentication"
+        line: PasswordAuthentication no
+      notify: Restart sshd
+    - name: Disable root login
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regex: "^(# *)?PermitRootLogin"
+        line: PermitRootLogin no
+      notify: Restart sshd
