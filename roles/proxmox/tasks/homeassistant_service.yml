@@ -113,21 +113,13 @@
       register: proxmox_homeassistant_user_token
   vars:
     proxmox_homeassistant_user_token_exists: "{{ proxmox_homeassistant_user_info.proxmox_users[0].tokens | length > 0 }}"
-- name: Store HomeAssistant token in 1Password
-  block:
-    - name: List all items
-      check_mode: false
-      ansible.builtin.command:
-        cmd: op item list
-      register: op_items
-      delegate_to: localhost
-    - name: Create an item in 1Password if one doesn't exist
-      ansible.builtin.shell: |
-        op item create --category=login --title="Proxmox HomeAssistant User" --vault="Homelab" username="{{ proxmox_homeassistant_user_token_id }}" "API Token[password]={{ proxmox_homeassistant_user_token_value }}" </dev/null
-      when: not proxmox_homeassistant_1password_item_exists
-      delegate_to: localhost
+- name: Create an item in 1Password if one doesn't exist
+  ansible.builtin.shell: |
+    op item create --category=login --title="Proxmox HomeAssistant User" --vault="Homelab" username="{{ proxmox_homeassistant_user_token_id }}" "API Token[password]={{ proxmox_homeassistant_user_token_value }}" </dev/null
+  when: not proxmox_homeassistant_1password_item_exists
+  delegate_to: localhost
   vars:
-    proxmox_homeassistant_1password_item_exists: "{{ op_items.stdout_lines | select('search', 'Proxmox HomeAssistant User') | list | length > 0 }}"
+    proxmox_homeassistant_1password_item_exists: "{{ hostvars['localhost']['onepassword_items'].stdout_lines | select('search', 'Proxmox HomeAssistant User') | list | length > 0 }}"
     proxmox_homeassistant_user_token_json: "{{ proxmox_homeassistant_user_token.stdout | ansible.builtin.from_json }}"
     proxmox_homeassistant_user_token_id: "{{ proxmox_homeassistant_user_token_json['full-tokenid'] }}"
     proxmox_homeassistant_user_token_value: "{{ proxmox_homeassistant_user_token_json.value }}"

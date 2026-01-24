@@ -1,0 +1,76 @@
+- name: Retrieve Centaurus root password
+  block:
+    - name: Create an item in 1Password if one doesn't exist
+      ansible.builtin.shell: |
+        op item create --category=login --title='Centaurus Root User' --vault='Homelab' username='root' --generate-password='letters,digits,symbols,32' </dev/null
+      delegate_to: localhost
+      register: centaurus_1password_item_new
+      when: not centaurus_1password_item_exists
+    - name: Retrieve 1Password password field
+      ansible.builtin.shell: |
+        op item get --vault Homelab "{{ centaurus_1password_id }}" --vault Homelab --fields label=password --format json | jq -r .value
+      delegate_to: localhost
+      register: centaurus_root_password
+  vars:
+    centaurus_1password_item_value: "{{ hostvars['localhost']['onepassword_items'].stdout_lines | select('search', 'Centaurus Root User') }}"
+    centaurus_1password_item_exists: "{{ centaurus_1password_item_value | list | length > 0 }}"
+    centaurus_1password_id: "{{ (((centaurus_1password_item_value | list)[0]) | split)[0] if centaurus_1password_item_exists else ((centaurus_1password_item_new.stdout_lines | ansible.builtin.select('match', 'ID') | list)[0] | string | split)[1] }}"
+- name: Create Centaurus container
+  community.proxmox.proxmox:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "{{ proxmox_admin_api_user }}"
+    api_password: "{{ proxmox_admin_password }}"
+    cores: 2
+    description: "Pihole instance that's part of a cluster - Managed by Ansible"
+    disk_volume:
+      size: 20 # in GiB
+      storage: "{{ proxmox_vm_ct_disk_storage }}"
+    hostname: "centaurus"
+    memory: 2148 # in MB
+    netif:
+      net0: "name=eth0,ip=dhcp,bridge=vmbr0,firewall=1"
+    node: "{{ proxmox_node_hostname }}"
+    onboot: true
+    ostemplate: "{{ proxmox_vm_ct_iso_vztmpl_storage }}:vztmpl/{{ proxmox_debian_13_vztmpl_filename }}"
+    ostype: debian
+    password: "{{ centaurus_root_password.stdout }}"
+    pubkey: "{{ proxmox_ansible_public_key }}"
+    state: present
+    swap: 512
+    timezone: host
+    update: false
+  register: centaurus_container
+- name: Set console mode to shell
+  ansible.builtin.uri:
+    url: "https://{{ proxmox_node_ip }}:8006/api2/json/nodes/{{ proxmox_node_hostname }}/lxc/{{ centaurus_container.vmid }}/config"
+    method: PUT
+    validate_certs: no
+    headers:
+      Cookie: "PVEAuthCookie={{ ticket_response.json.data.ticket }}"
+      CSRFPreventionToken: "{{ ticket_response.json.data.CSRFPreventionToken }}"
+    body_format: json
+    body: { "cmode": "shell" }
+- name: Start up the container
+  community.proxmox.proxmox:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "{{ proxmox_admin_api_user }}"
+    api_password: "{{ proxmox_admin_password }}"
+    vmid: "{{ centaurus_container.vmid }}"
+    state: started
+- name: Ensure packages are installed
+  remote_user: root
+  ansible.builtin.apt:
+    package: sudo
+- name: Restart journal
+  become: true
+  ansible.builtin.command:
+    cmd: systemctl restart systemd-journald
+- name: Disable IPv6
+  become: true
+  ansible.builtin.copy:
+    src: ../../files/90-disable-ipv6.conf
+    dest: /etc/sysctl.d/90-disable-ipv6.conf
+- name: Restart networking
+  become: true
+  ansible.builtin.command:
+    cmd: systemctl restart networking

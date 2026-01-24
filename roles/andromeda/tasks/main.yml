@@ -1,8 +1,14 @@
 ---
 # Touchscreen should work out of the box with no changes
-- name: Turn on VNC access
+- name: Check VNC access
+  ansible.builtin.command:
+    cmd: "sudo raspi-config nonint get_vnc"
+  register: vnc_enabled
+  changed_when: vnc_enabled.stdout != '0'
+- name: Turn on VNC access if it isn't already
   ansible.builtin.command:
     cmd: "sudo raspi-config nonint do_vnc 0"
+  when: vnc_enabled.stdout != '0'
 # - name: Copy configuration file for touchkio
 #   ansible.builtin.copy:
 #     src: ../files/Arguments.json
