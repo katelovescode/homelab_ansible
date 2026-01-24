@@ -19,7 +19,7 @@
         state: present
 
 - name: Secure SSH on non-hypervisor nodes
-  when: ("hypervisors" not in group_names)
+  when: ("proxmox_nodes" not in group_names)
   block:
     - name: Lock root user password
       ansible.builtin.user:

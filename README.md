@@ -10,7 +10,9 @@
 
 ## Get started
 
-```
+```zsh
+ # this shouldn't be necessary on my Mac because pyenv virtualenv is configured
+ # in .zshrc to automatically activate but just in case
 pyenv activate ansible-env-3.13
 op signin
 ansible-playbook playbook.yml
