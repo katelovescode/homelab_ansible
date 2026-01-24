@@ -11,7 +11,7 @@
   remote_user: root
   ansible.builtin.copy:
     dest: /etc/apt/sources.list.d/proxmox.sources
-    mode: "0600"
+    mode: "0644"
     content: |
       Types: deb
       URIs: http://download.proxmox.com/debian/pve
