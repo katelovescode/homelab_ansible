@@ -1,0 +1,41 @@
+---
+- name: Check for admin user
+  ansible.builtin.getent:
+    database: passwd
+    split: ":"
+- name: Create linux user for admin
+  become: true
+  block:
+    - name: Create admin user
+      ansible.builtin.user:
+        name: "{{ proxmox_admin_username }}"
+        password: "{{ proxmox_admin_hashed_password }}"
+        group: sudo
+        shell: /bin/bash
+    - name: Add SSH key for admin user
+      become: true
+      ansible.posix.authorized_key:
+        user: "{{ proxmox_admin_username }}"
+        key: "{{ proxmox_ansible_public_key }}"
+    - name: Configure admin user
+      community.proxmox.proxmox_user:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "root@pam"
+        api_password: "{{ proxmox_root_password }}"
+        comment: Managed by Ansible
+        email: "{{ proxmox_admin_email }}"
+        firstname: "{{ proxmox_admin_firstname }}"
+        enable: true
+        userid: "{{ proxmox_admin_api_user }}"
+    - name: Add admin permissions
+      community.proxmox.proxmox_access_acl:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "root@pam"
+        api_password: "{{ proxmox_root_password }}"
+        path: /
+        type: user
+        state: present
+        ugid: "{{ proxmox_admin_api_user }}"
+        roleid: Administrator
+        propagate: true
+  when: proxmox_admin_username not in ansible_facts['getent_passwd'] | dict2items | map(attribute='key') | list

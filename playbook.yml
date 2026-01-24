@@ -1,5 +1,10 @@
-- name: Ansible on all hosts
-  hosts: all
+- name: Get 1Password items for playbook
+  hosts: localhost
+  roles:
+    - 1password
+
+- name: Ansible user on all devices
+  hosts: devices
   gather_facts: false
   roles:
     - ansible_user
@@ -22,30 +27,6 @@
   hosts: andromeda
   roles:
     - andromeda
-#   tasks:
-#     - name: remove pvesh
-#       become: true
-#       ansible.builtin.command:
-#         cmd: "pvesh delete /access/users/homepage@pve/token/homepage_token"
-# - name: Test pvesh command
-#   hosts: enterprise
-#   tasks:
-#     - name: pvesh get
-#       become: true
-#       ansible.builtin.command:
-#         cmd: "pvesh create /access/users/homepage@pve/token/homepage_token --comment='Managed by Ansible' --output-format=json"
-#       register: proxmox_homepage_user_token
-#     - name: Debug pvesh
-#       ansible.builtin.debug:
-#         msg: "{{ proxmox_homepage_user_token_value }}"
-#       vars:
-#         proxmox_homepage_user_token_json: "{{ proxmox_homepage_user_token.stdout | ansible.builtin.from_json }}"
-#         proxmox_homepage_user_token_id: "{{ proxmox_homepage_user_token_json['full-tokenid'] }}"
-#         proxmox_homepage_user_token_value: "{{ proxmox_homepage_user_token_json.value }}"
-# - name: Raspberry Pi 4 setup
-#   hosts: andromeda
-#   roles:
-#     - andromeda
 #### TODO: uncomment after primary development
 # vars_prompt:
 #   - name: logged_into_onepassword

@@ -1,16 +1,15 @@
-hypervisors:
+proxmox_nodes:
+  children:
+    containers:
   hosts:
     enterprise:
-
-devices:
-  hosts:
-    andromeda:
 
 debian_based:
   hosts:
     enterprise:
     andromeda:
 
-proxmox_nodes:
+devices:
   hosts:
     enterprise:
+    andromeda:
