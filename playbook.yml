@@ -1,3 +1,18 @@
+- name: Verify ready
+  hosts: all
+  gather_facts: false
+  vars_prompt:
+    - name: confirmed_ready
+      prompt: "\n\nIf you're adding new VMs or containers, don't forget to configure all IPs and MAC addresses in Unifi.  Continue? (y/n)"
+      private: false
+  tasks:
+    - name: Fail all tasks if not ready
+      ansible.builtin.fail:
+        msg: "Not ready"
+      when: not ready_to_go
+      vars:
+        ready_to_go: "{{ confirmed_ready == 'y' or confirmed_ready == 'Y'}}"
+
 - name: Get 1Password items for playbook
   hosts: localhost
   roles:
