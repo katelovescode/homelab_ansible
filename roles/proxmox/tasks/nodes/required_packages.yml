@@ -1,4 +1,7 @@
 ---
+#################################
+# Packages required for Ansible
+#################################
 - name: Ensure pip is installed
   become: true
   ansible.builtin.apt:

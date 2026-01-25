@@ -119,7 +119,7 @@
   when: not proxmox_homeassistant_1password_item_exists
   delegate_to: localhost
   vars:
-    proxmox_homeassistant_1password_item_exists: "{{ hostvars['localhost']['onepassword_items'].stdout_lines | select('search', 'Proxmox HomeAssistant User') | list | length > 0 }}"
+    proxmox_homeassistant_1password_item_exists: "{{ (hostvars['localhost']['onepassword_items'].stdout | ansible.builtin.from_json) | selectattr('title','==','Proxmox HomeAssistant User') | length > 0 }}"
     proxmox_homeassistant_user_token_json: "{{ proxmox_homeassistant_user_token.stdout | ansible.builtin.from_json }}"
     proxmox_homeassistant_user_token_id: "{{ proxmox_homeassistant_user_token_json['full-tokenid'] }}"
     proxmox_homeassistant_user_token_value: "{{ proxmox_homeassistant_user_token_json.value }}"

@@ -1,0 +1,91 @@
+---
+- name: List all existing virtual machines on node
+  community.proxmox.proxmox_vm_info:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "{{ proxmox_admin_api_user }}"
+    api_password: "{{ proxmox_admin_password }}"
+    type: lxc
+  register: proxmox_containers
+
+- name: Container configuration
+  block:
+    - name: Create container
+      block:
+        - name: Get root password
+          block:
+            - name: Create
+              ansible.builtin.shell: |
+                op item create --category=login --title='{{ hostname | capitalize}} Root User' --vault='Homelab' username='root' --generate-password='letters,digits,symbols,32' --format json </dev/null
+              delegate_to: localhost
+              register: new_onepassword_record
+              when: not record_exists
+            - name: Retrieve
+              ansible.builtin.shell: |
+                op item get "{{ record_id }}" --vault Homelab --fields label=password --format json
+              delegate_to: localhost
+              register: onepassword_record
+          vars:
+            record: "{{( hostvars['localhost']['onepassword_items'].stdout | ansible.builtin.from_json) | selectattr('title','==', record_title }}"
+            record_title: "{{ hostname | capitalize }} Root User"
+            record_exists: "{{ record | list | length > 0 }}"
+            existing_id: "{{ ((record | list)[0] | split)[0] if record_exists else None }}"
+            new_id: "{{ (new_onepassword_record.stdout | ansible.builtin.from_json).id if not record_exists else None }}"
+            record_id: "{{ existing_id or new_id }}"
+        - name: Create
+          community.proxmox.proxmox:
+            api_host: "{{ proxmox_node_ip }}"
+            api_user: "{{ proxmox_admin_api_user }}"
+            api_password: "{{ proxmox_admin_password }}"
+            cores: 2
+            description: "Pihole instance that's part of a cluster - Managed by Ansible"
+            disk_volume:
+              size: 20 # in GiB
+              storage: "{{ proxmox_vm_ct_disk_storage }}"
+            hostname: "{{ hostname }}"
+            memory: 2148 # in MB
+            netif:
+              net0: "name=eth0,ip=dhcp,bridge=vmbr0,firewall=1,hwaddr={{ mac_address }}"
+            node: "{{ proxmox_node_hostname }}"
+            onboot: true
+            ostemplate: "{{ proxmox_vm_ct_iso_vztmpl_storage }}:vztmpl/{{ proxmox_debian_13_vztmpl_filename }}"
+            ostype: debian
+            password: "{{ root_password }}"
+            pubkey: "{{ proxmox_ansible_public_key }}"
+            state: present
+            swap: 512
+            timezone: host
+            update: false
+          register: new_container
+        - name: Set console mode to shell
+          ansible.builtin.uri:
+            url: "https://{{ proxmox_node_ip }}:8006/api2/json/nodes/{{ proxmox_node_hostname }}/lxc/{{ new_container.vmid }}/config"
+            method: PUT
+            validate_certs: no
+            headers:
+              Cookie: "PVEAuthCookie={{ ticket_response.json.data.ticket }}"
+              CSRFPreventionToken: "{{ ticket_response.json.data.CSRFPreventionToken }}"
+            body_format: json
+            body: { "cmode": "shell" }
+        - name: Start up the container
+          community.proxmox.proxmox:
+            api_host: "{{ proxmox_node_ip }}"
+            api_user: "{{ proxmox_admin_api_user }}"
+            api_password: "{{ proxmox_admin_password }}"
+            vmid: "{{ new_container.vmid }}"
+            state: started
+      when: not container_exists
+      vars:
+        root_password: "{{ (onepassword_record.stdout | ansible.builtin.from_json).value }}"
+        mac_address: "{{ ((lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json) | ansible.builtin.json_query(hostname)).mac }}"
+    - name: Start up the container
+      community.proxmox.proxmox:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "{{ proxmox_admin_api_user }}"
+        api_password: "{{ proxmox_admin_password }}"
+        vmid: "{{ container_vmid }}"
+        state: started
+  vars:
+    container_exists: "{{ hostname in (proxmox_containers | ansible.builtin.json_query('proxmox_vms') | map(attribute='name')) }}"
+    new_container_vmid: "{{ new_container.vmid if not container_exists else None }}"
+    existing_container_vmid: "{{ (proxmox_containers | ansible.builtin.json_query('proxmox_vms') | selectattr('name', '==', hostname))[0].vmid if container_exists else None }}"
+    container_vmid: "{{ existing_container_vmid or new_container_vmid }}"

@@ -1,0 +1,16 @@
+---
+- name: Import Ansible User role
+  ansible.builtin.import_role:
+    name: ansible_user
+- name: Import Debian role
+  ansible.builtin.import_role:
+    name: debian
+- name: Restart journal
+  ansible.builtin.command:
+    cmd: systemctl restart systemd-journald
+- name: Disable IPv6
+  ansible.builtin.copy:
+    src: ../../files/90-disable-ipv6.conf
+    dest: /etc/sysctl.d/90-disable-ipv6.conf
+- name: Reboot
+  ansible.builtin.reboot:

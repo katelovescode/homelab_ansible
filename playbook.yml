@@ -13,15 +13,22 @@
       become: true
       ansible.builtin.command: service ssh restart
 
-- name: Packages for Debian devices
+- name: Debian setup with sudo
   hosts: debian_based
+  gather_facts: false
   roles:
-    - debian
+    - sudo
 
 - name: Proxmox node, cluster and VM management
   hosts: enterprise
   roles:
     - proxmox
+
+- name: Debian package updates
+  hosts: debian_based
+  gather_facts: false
+  roles:
+    - debian
 
 - name: Andromeda Raspberry Pi setup
   hosts: andromeda

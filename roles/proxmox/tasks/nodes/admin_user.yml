@@ -3,6 +3,12 @@
   ansible.builtin.getent:
     database: passwd
     split: ":"
+- name: List existing users
+  community.proxmox.proxmox_user_info:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "root@pam"
+    api_password: "{{ proxmox_root_password }}"
+  register: proxmox_users
 - name: Create linux user for admin
   become: true
   block:
@@ -38,4 +44,7 @@
         ugid: "{{ proxmox_admin_api_user }}"
         roleid: Administrator
         propagate: true
-  when: proxmox_admin_username not in ansible_facts['getent_passwd'] | dict2items | map(attribute='key') | list
+  when: not admin_exists_in_os and not admin_exists_in_proxmox
+  vars:
+    admin_exists_in_proxmox: "{{ proxmox_admin_username in proxmox_users | ansible.builtin.json_query('proxmox_users') | map(attribute='user') }}"
+    admin_exists_in_os: "{{ proxmox_admin_username in ansible_facts['getent_passwd'] | dict2items | map(attribute='key') | list }}"

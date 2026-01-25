@@ -81,7 +81,7 @@
   when: not proxmox_homepage_1password_item_exists
   delegate_to: localhost
   vars:
-    proxmox_homepage_1password_item_exists: "{{ hostvars['localhost']['onepassword_items'].stdout_lines | select('search', 'Proxmox Homepage User') | list | length > 0 }}"
+    proxmox_homepage_1password_item_exists: "{{ (hostvars['localhost']['onepassword_items'].stdout | ansible.builtin.from_json) | selectattr('title','==','Proxmox Homepage User') | length > 0 }}"
     proxmox_homepage_user_token_json: "{{ proxmox_homepage_user_token.stdout | ansible.builtin.from_json }}"
     proxmox_homepage_user_token_id: "{{ proxmox_homepage_user_token_json['full-tokenid'] }}"
     proxmox_homepage_user_token_value: "{{ proxmox_homepage_user_token_json.value }}"

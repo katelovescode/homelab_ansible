@@ -1,4 +1,0 @@
----
-- name: Centaurus
-  ansible.builtin.import_tasks:
-    file: containers/centaurus.yml
