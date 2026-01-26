@@ -1,6 +1,7 @@
+all:
+  vars:
+    ansible_host: "{{ (lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json | ansible.builtin.json_query(inventory_hostname)).ip }}"
 proxmox_nodes:
-  children:
-    containers:
   hosts:
     enterprise:
 
@@ -8,8 +9,17 @@ debian_based:
   hosts:
     enterprise:
     andromeda:
+    debian12_template:
 
 devices:
   hosts:
     enterprise:
     andromeda:
+
+containers:
+  hosts:
+    centaurus:
+
+container_templates:
+  hosts:
+    debian12_template:

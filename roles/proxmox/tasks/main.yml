@@ -6,6 +6,19 @@
 - ansible.builtin.import_tasks: roles/proxmox/tasks/nodes/required_packages.yml
 - ansible.builtin.import_tasks: roles/proxmox/tasks/nodes/admin_user.yml
 
+- name: Get all existing containers
+  block:
+    - name: List all existing virtual machines on node of type lxc
+      community.proxmox.proxmox_vm_info:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "{{ proxmox_admin_api_user }}"
+        api_password: "{{ proxmox_admin_password }}"
+        type: lxc
+      register: container_list
+    - name: Set container list to be used in other plays
+      ansible.builtin.set_fact:
+        proxmox_containers: "{{ container_list }}"
+
 #################################
 # API authentication
 #################################
@@ -38,10 +51,19 @@
 #################################
 # Create containers
 #################################
-- name: Create containers
+- name: Create container templates
   ansible.builtin.include_tasks:
-    file: "roles/proxmox/tasks/containers/{{ item }}.yml"
+    file: "roles/proxmox/tasks/containers/templates/{{ hostname }}.yml"
   loop:
-    - centaurus
+    - { name: debian12_template, vmid: 999 }
   vars:
-    hostname: "{{ item }}"
+    hostname: "{{ item.name }}"
+    sanitized_hostname: "{{ item.name | replace('_', '-') }}"
+    vmid: "{{ item.vmid }}"
+# - name: Create Debian 12 container clones
+#   ansible.builtin.include_tasks:
+#     file: "roles/proxmox/tasks/containers/debian12_clone.yml"
+#   loop:
+#     - centaurus
+#   vars:
+#     hostname: "{{ item }}"

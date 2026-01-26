@@ -11,7 +11,7 @@
   when: vnc_enabled.stdout != '0'
 # - name: Copy configuration file for touchkio
 #   ansible.builtin.copy:
-#     src: ../files/Arguments.json
+#     src: roles/andromeda/files/Arguments.json
 #     dest: /home/ansible/.config/touchkio/Arguments.json
 #     mode: "0644"
 # - name: Install touchkio in update mode to skip prompts

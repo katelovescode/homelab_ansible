@@ -3,39 +3,49 @@
   remote_user: "{{ root_user }}"
   become: true
   block:
+    - name: Ensure sudo is installed
+      ansible.builtin.apt:
+        package: sudo
+    - name: Create sudoers.d directory
+      ansible.builtin.file:
+        path: "/etc/sudoers.d"
+        state: directory
+        mode: "0600"
     - name: Create ansible user
       ansible.builtin.user:
         name: ansible
         uid: 10001
+        shell: "/bin/bash"
     - name: Grant ansible password-less sudo
       ansible.builtin.copy:
-        src: files/sudoers
+        src: roles/bootstrap/files/sudoers
         dest: /etc/sudoers.d/ansible
         mode: "0600"
     - name: Authorize SSH key for ansible user
       ansible.posix.authorized_key:
-        user: ansible
+        user: "ansible"
         key: "{{ ansible_public_key }}"
         state: present
-
-- name: Secure SSH on non-hypervisor nodes
-  when: ("proxmox_nodes" not in group_names)
-  block:
-    - name: Lock root user password
-      ansible.builtin.user:
-        name: root
-        password: "!"
-    - name: Remove all SSH keys from root user
-      ansible.builtin.file:
-        path: /root/.ssh/authorized_keys
-        state: absent
     - name: Disable password authentication
       become: true
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
         regex: "^(# *)?PasswordAuthentication"
         line: PasswordAuthentication no
-      notify: Restart sshd
+
+- name: Secure SSH on non-hypervisor nodes
+  when: ("proxmox_nodes" not in group_names)
+  block:
+    - name: Lock root user password
+      become: true
+      ansible.builtin.user:
+        name: root
+        password: "!"
+    - name: Remove all SSH keys from root user
+      become: true
+      ansible.builtin.file:
+        path: /root/.ssh/authorized_keys
+        state: absent
     - name: Disable root login
       become: true
       ansible.builtin.lineinfile:

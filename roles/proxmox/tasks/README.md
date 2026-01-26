@@ -22,7 +22,7 @@ The tasks run on these hosts will create and configure several node and cluster 
 - `admin_user` as default `ansible` user, `become: true` on `ansible.builtin.user` and `ansible.posix.authorized_key` modules, `root` API account for proxmox actions
   - interacts w/ the OS to create an admin user, and then uses the root account's password to create an admin user and assign them administrator privileges via the Proxmox API
 - `install_templates` as `ansible` with the admin account's Proxmox API credentials
-  - using the admin account's password to interact with the API, installs Debian 13 template for containers
+  - using the admin account's password to interact with the API, installs Debian 12 template for containers
 
 We don't have to document every step but essentially, any time we're interacting with the OS, we want to be using `ansible`, and any time we're interacting with the API we want to be using the admin account's API creds. But privilege escalation may require `become: true` or `remote_user: root` depending on which functions/files you're trying to interact with on the system.
 

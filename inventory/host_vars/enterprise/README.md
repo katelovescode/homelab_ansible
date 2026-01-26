@@ -7,6 +7,5 @@ Files in this directory are meant to hold variables that _only_ apply to the Ent
 ```
 # secrets.yml
 
-ansible_host: [IP address]
 proxmox_root_password: "{{ '[Password String]' }}"
 ```

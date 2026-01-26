@@ -1,50 +1,44 @@
 ---
-- name: Check for admin user
-  ansible.builtin.getent:
-    database: passwd
-    split: ":"
-- name: List existing users
-  community.proxmox.proxmox_user_info:
-    api_host: "{{ proxmox_node_ip }}"
-    api_user: "root@pam"
-    api_password: "{{ proxmox_root_password }}"
-  register: proxmox_users
-- name: Create linux user for admin
-  become: true
+- name: Create admin user if one doesn't exist
   block:
-    - name: Create admin user
+    - name: Check for user in OS
+      become: true
+      ansible.builtin.getent:
+        database: passwd
+        split: ":"
+    - name: Create user
+      become: true
       ansible.builtin.user:
         name: "{{ proxmox_admin_username }}"
         password: "{{ proxmox_admin_hashed_password }}"
         group: sudo
         shell: /bin/bash
-    - name: Add SSH key for admin user
-      become: true
-      ansible.posix.authorized_key:
-        user: "{{ proxmox_admin_username }}"
-        key: "{{ proxmox_ansible_public_key }}"
-    - name: Configure admin user
-      community.proxmox.proxmox_user:
-        api_host: "{{ proxmox_node_ip }}"
-        api_user: "root@pam"
-        api_password: "{{ proxmox_root_password }}"
-        comment: Managed by Ansible
-        email: "{{ proxmox_admin_email }}"
-        firstname: "{{ proxmox_admin_firstname }}"
-        enable: true
-        userid: "{{ proxmox_admin_api_user }}"
-    - name: Add admin permissions
-      community.proxmox.proxmox_access_acl:
-        api_host: "{{ proxmox_node_ip }}"
-        api_user: "root@pam"
-        api_password: "{{ proxmox_root_password }}"
-        path: /
-        type: user
-        state: present
-        ugid: "{{ proxmox_admin_api_user }}"
-        roleid: Administrator
-        propagate: true
-  when: not admin_exists_in_os and not admin_exists_in_proxmox
-  vars:
-    admin_exists_in_proxmox: "{{ proxmox_admin_username in proxmox_users | ansible.builtin.json_query('proxmox_users') | map(attribute='user') }}"
-    admin_exists_in_os: "{{ proxmox_admin_username in ansible_facts['getent_passwd'] | dict2items | map(attribute='key') | list }}"
+      when: not admin_exists_in_os
+      vars:
+        admin_exists_in_os: "{{ proxmox_admin_username in ansible_facts['getent_passwd'] | dict2items | map(attribute='key') | list }}"
+- name: Add SSH key for admin user
+  become: true # Is this necessary?
+  ansible.posix.authorized_key:
+    user: "{{ proxmox_admin_username }}"
+    key: "{{ proxmox_ansible_public_key }}"
+- name: Configure admin user
+  community.proxmox.proxmox_user:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "root@pam"
+    api_password: "{{ proxmox_root_password }}"
+    comment: Managed by Ansible
+    email: "{{ proxmox_admin_email }}"
+    firstname: "{{ proxmox_admin_firstname }}"
+    enable: true
+    userid: "{{ proxmox_admin_api_user }}"
+- name: Add admin permissions
+  community.proxmox.proxmox_access_acl:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "root@pam"
+    api_password: "{{ proxmox_root_password }}"
+    path: /
+    type: user
+    state: present
+    ugid: "{{ proxmox_admin_api_user }}"
+    roleid: Administrator
+    propagate: true

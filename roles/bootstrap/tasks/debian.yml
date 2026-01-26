@@ -4,6 +4,7 @@
   ansible.builtin.apt:
     update_cache: true
     upgrade: "yes"
+  ignore_errors: true
 - name: Ensure vim is installed
   become: true
   ansible.builtin.apt:

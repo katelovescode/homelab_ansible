@@ -1,5 +1,0 @@
----
-- name: Ensure sudo is installed
-  remote_user: "{{ root_user }}"
-  ansible.builtin.apt:
-    package: sudo

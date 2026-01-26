@@ -1,4 +1,0 @@
----
-- name: Default Debian 13 Setup
-  ansible.builtin.include_tasks:
-    file: "roles/proxmox/tasks/containers/templates/debian13.yml"
