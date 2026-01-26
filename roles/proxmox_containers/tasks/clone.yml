@@ -1,0 +1,43 @@
+---
+- name: Create a full clone of the container
+  community.proxmox.proxmox:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "{{ proxmox_admin_api_user }}"
+    api_password: "{{ proxmox_admin_password }}"
+    node: "{{ proxmox_node_hostname }}"
+    clone: "{{ clone_vmid }}"
+    hostname: "{{ sanitized_hostname }}"
+    storage: "{{ proxmox_vm_ct_disk_storage }}"
+  register: container_info
+- name: Update configuration
+  community.proxmox.proxmox:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "{{ proxmox_admin_api_user }}"
+    api_password: "{{ proxmox_admin_password }}"
+    node: "{{ proxmox_node_hostname }}"
+    hostname: "{{ sanitized_hostname }}"
+    netif:
+      net0: "name=eth0,ip=dhcp,bridge=vmbr0,firewall=1,hwaddr={{ mac_address }}"
+    update: true
+- name: Start the container
+  community.proxmox.proxmox:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "{{ proxmox_admin_api_user }}"
+    api_password: "{{ proxmox_admin_password }}"
+    vmid: "{{ container_info | ansible.builtin.json_query('vmid') }}"
+    state: started
+- name: Add SSH key to known_hosts on local
+  block:
+    - name: Scan for SSH key
+      ansible.builtin.shell: |
+        ssh-keyscan -q "{{ ip_address }}"
+      delegate_to: localhost
+      register: ssh_scan
+    - name: Add to known hosts
+      ansible.builtin.known_hosts:
+        name: "{{ ip_address }}"
+        key: "{{ pub_key }}"
+      loop: "{{ ssh_scan.stdout_lines }}"
+      loop_control:
+        loop_var: pub_key
+      delegate_to: localhost

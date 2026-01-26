@@ -21,4 +21,4 @@
   when: ("debian_based" in group_names)
 
 - ansible.builtin.import_tasks: roles/bootstrap/tasks/debian_containers.yml
-  when: ("containers" in group_names)
+  when: ("container_templates" in group_names)

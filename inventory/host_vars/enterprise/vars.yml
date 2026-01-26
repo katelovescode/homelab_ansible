@@ -7,10 +7,12 @@ proxmox_node_hostname: enterprise
 # vmid: "{{ item.vmid }}"
 # vztmpl_filename: "{{ item.vztmpl_filename }}"
 # ostype: "{{ item.ostype }}"
-# mac_address: "{{ item.mac_address }}"
 #
 # calculated
 # sanitized_hostname: "{{ item.name | replace('_', '-') }}"
+# clone_host_record: "{{ (lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json | ansible.builtin.json_query(hostname)) }}"
+# mac_address: "{{ clone_host_record.mac }}"
+# ip_address: "{{ clone_host_record.ip }}"
 #
 # optional
 # cores: "{{ item.cores | default(2) }}"
@@ -27,3 +29,18 @@ template_hosts:
       ostype: "debian",
       mac_address: "{{ (lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json | ansible.builtin.json_query('debian12_template')).mac }}",
     }
+
+# KEYS FOR CLONE HOSTS
+#
+# required
+# name: "centaurus"
+# clone_vmid: 999
+#
+# calculated
+# sanitized_hostname: "{{ item.name | replace('_', '-') }}"
+# clone_host_record: "{{ (lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json | ansible.builtin.json_query(hostname)) }}"
+# mac_address: "{{ clone_host_record.mac }}"
+# ip_address: "{{ clone_host_record.ip }}"
+
+container_clone_hosts:
+  - { name: "centaurus", clone_vmid: 999 }

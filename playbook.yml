@@ -59,7 +59,11 @@
         vmid: "{{ item.vmid }}"
         state: stopped
       loop: "{{ template_hosts }}"
-#
+
+- name: Create container clones
+  hosts: enterprise
+  roles:
+    - proxmox_containers
 # - name: Clone containers and VMs in Proxmox
 #   hosts: enterprise
 #   tasks:

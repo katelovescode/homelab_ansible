@@ -11,11 +11,13 @@
     vmid: "{{ item.vmid }}"
     vztmpl_filename: "{{ item.vztmpl_filename }}"
     ostype: "{{ item.ostype }}"
-    mac_address: "{{ item.mac_address }}"
     #
     # calculated
     #
     sanitized_hostname: "{{ item.name | replace('_', '-') }}"
+    template_host_record: "{{ (lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json | ansible.builtin.json_query(hostname)) }}"
+    mac_address: "{{ template_host_record.mac }}"
+    ip_address: "{{ template_host_record.ip }}"
     #
     # optional
     #
