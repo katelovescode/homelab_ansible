@@ -64,6 +64,15 @@
   hosts: enterprise
   roles:
     - proxmox_containers
+
+- name: Update packages
+  hosts: debian_based
+  tasks:
+    - name: Update packages
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: "yes"
 # - name: Clone containers and VMs in Proxmox
 #   hosts: enterprise
 #   tasks:
