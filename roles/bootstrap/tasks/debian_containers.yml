@@ -21,10 +21,10 @@
 #   become: true
 #   ansible.builtin.reboot:
 #     reboot_timeout: 120
-- name: Turn off machine to prepare for cloning
-  community.proxmox.proxmox:
-    api_host: "{{ proxmox_node_ip }}"
-    api_user: "{{ proxmox_admin_api_user }}"
-    api_password: "{{ proxmox_admin_password }}"
-    vmid: "{{ vmid }}"
-    state: stopped
+# - name: Turn off machine to prepare for cloning
+#   community.proxmox.proxmox:
+#     api_host: "{{ proxmox_node_ip }}"
+#     api_user: "{{ proxmox_admin_api_user }}"
+#     api_password: "{{ proxmox_admin_password }}"
+#     vmid: "{{ vmid }}"
+#     state: stopped

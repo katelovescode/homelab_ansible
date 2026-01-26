@@ -17,7 +17,7 @@
       register: container_list
     - name: Set container list to be used in other plays
       ansible.builtin.set_fact:
-        proxmox_containers: "{{ container_list }}"
+        proxmox_containers: "{{ container_list | ansible.builtin.json_query('proxmox_vms') | map(attribute='name') }}"
 
 #################################
 # API authentication
@@ -34,6 +34,9 @@
         "password": "{{ proxmox_admin_password }}",
       }
   register: ticket_response
+- name: Make ticket available for future plays
+  ansible.builtin.set_fact:
+    proxmox_ticket: "{{ ticket_response }}"
 
 #################################
 # Node configuration
@@ -47,23 +50,3 @@
 #################################
 - ansible.builtin.import_tasks: roles/proxmox/tasks/service_users/homeassistant.yml
 - ansible.builtin.import_tasks: roles/proxmox/tasks/service_users/homepage.yml
-
-#################################
-# Create containers
-#################################
-- name: Create container templates
-  ansible.builtin.include_tasks:
-    file: "roles/proxmox/tasks/containers/templates/{{ hostname }}.yml"
-  loop:
-    - { name: debian12_template, vmid: 999 }
-  vars:
-    hostname: "{{ item.name }}"
-    sanitized_hostname: "{{ item.name | replace('_', '-') }}"
-    vmid: "{{ item.vmid }}"
-# - name: Create Debian 12 container clones
-#   ansible.builtin.include_tasks:
-#     file: "roles/proxmox/tasks/containers/debian12_clone.yml"
-#   loop:
-#     - centaurus
-#   vars:
-#     hostname: "{{ item }}"
