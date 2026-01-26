@@ -1,6 +1,9 @@
 all:
   vars:
-    ansible_host: "{{ (lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json | ansible.builtin.json_query(inventory_hostname)).ip }}"
+    mac_and_ip_record: "{{ lookup('ansible.builtin.file', (inventory_dir ~ '/secrets/mac_and_ip_addresses.json')) | ansible.builtin.from_json | ansible.builtin.json_query(inventory_hostname) }}"
+    ip_address: "{{ mac_and_ip_record.ip }}"
+    mac_address: "{{ mac_and_ip_record.mac }}"
+    ansible_host: "{{ ip_address }}"
 proxmox_nodes:
   hosts:
     enterprise:

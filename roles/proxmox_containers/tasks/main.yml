@@ -13,6 +13,6 @@
     # calculated
     #
     sanitized_hostname: "{{ item.name | replace('_', '-') }}"
-    clone_host_record: "{{ (lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json | ansible.builtin.json_query(hostname)) }}"
+    clone_host_record: "{{ lookup('ansible.builtin.file', (inventory_dir ~ '/secrets/mac_and_ip_addresses.json')) | ansible.builtin.from_json | ansible.builtin.json_query(hostname) }}"
     mac_address: "{{ clone_host_record.mac }}"
     ip_address: "{{ clone_host_record.ip }}"
