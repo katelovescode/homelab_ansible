@@ -27,6 +27,12 @@
 #       vars:
 #         ready_to_go: "{{ ready == 'y' or ready == 'Y'}}"
 
+- name: Ensure known_hosts is configured for all devices
+  gather_facts: false
+  hosts: devices
+  roles:
+    - ssh_known_hosts
+
 - name: Get 1Password items for playbook
   hosts: localhost
   roles:
@@ -59,18 +65,59 @@
         vmid: "{{ item.vmid }}"
         state: stopped
       loop: "{{ template_hosts }}"
-#
+
+- name: Create container clones
+  hosts: enterprise
+  roles:
+    - proxmox_containers
+
+- name: Set up SSH on containers
+  hosts: containers
+  roles:
+    - ssh_known_hosts
+
+- name: Update packages on running devices
+  gather_facts: false
+  hosts: debian_based:!container_templates
+  tasks:
+    - name: Update packages
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: "yes"
 # - name: Clone containers and VMs in Proxmox
 #   hosts: enterprise
 #   tasks:
 # clone the VMs/containers
 #
-# - name: Andromeda Raspberry Pi setup
-#   hosts: andromeda
-#   roles:
-#     - andromeda
+- name: Andromeda Raspberry Pi setup
+  hosts: andromeda
+  roles:
+    - andromeda
 #
 # - name: Install PiHole on cluster
 #   hosts: pihole_cluster
 #   roles:
 #     - pihole
+
+#
+# - name: Debug
+#   hosts: centaurus
+#   tasks:
+#     - name: TEST DEBUG
+#       remote_user: "{{ root_user }}"
+#       ignore_unreachable: true
+#       ansible.builtin.ping:
+#       register: root_connection
+
+#     - name: Attempt connection as ansible
+#       ignore_unreachable: true
+#       ansible.builtin.ping:
+#       register: ansible_connection
+
+#     - name: Debug root
+#       delegate_to: localhost
+#       ansible.builtin.debug:
+#         var: root_connection | ansible.builtin.json_query('unreachable') == true
+#       ignore_errors: true
+#       # when: root_connection.unreachable == true

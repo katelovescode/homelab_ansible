@@ -2,4 +2,5 @@
   hosts: all
   gather_facts: false
   roles:
+    - ssh_known_hosts
     - bootstrap
