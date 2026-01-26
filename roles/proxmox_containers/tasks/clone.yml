@@ -26,18 +26,3 @@
     api_password: "{{ proxmox_admin_password }}"
     vmid: "{{ container_info | ansible.builtin.json_query('vmid') }}"
     state: started
-- name: Add SSH key to known_hosts on local
-  block:
-    - name: Scan for SSH key
-      ansible.builtin.shell: |
-        ssh-keyscan -q "{{ ip_address }}"
-      delegate_to: localhost
-      register: ssh_scan
-    - name: Add to known hosts
-      ansible.builtin.known_hosts:
-        name: "{{ ip_address }}"
-        key: "{{ pub_key }}"
-      loop: "{{ ssh_scan.stdout_lines }}"
-      loop_control:
-        loop_var: pub_key
-      delegate_to: localhost
