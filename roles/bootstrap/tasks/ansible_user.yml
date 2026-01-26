@@ -2,6 +2,7 @@
 - name: Enable ansible user authentication
   remote_user: "{{ root_user }}"
   become: true
+  become_user: root
   block:
     - name: Ensure sudo is installed
       ansible.builtin.apt:

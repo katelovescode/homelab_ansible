@@ -65,8 +65,9 @@
   roles:
     - proxmox_containers
 
-- name: Update packages
-  hosts: debian_based
+- name: Update packages on running devices
+  gather_facts: false
+  hosts: debian_based:!container_templates
   tasks:
     - name: Update packages
       become: true
@@ -78,10 +79,10 @@
 #   tasks:
 # clone the VMs/containers
 #
-# - name: Andromeda Raspberry Pi setup
-#   hosts: andromeda
-#   roles:
-#     - andromeda
+- name: Andromeda Raspberry Pi setup
+  hosts: andromeda
+  roles:
+    - andromeda
 #
 # - name: Install PiHole on cluster
 #   hosts: pihole_cluster
