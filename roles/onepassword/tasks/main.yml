@@ -1,7 +1,7 @@
 ---
 - name: Get all items if they aren't already stored in facts
   ansible.builtin.command:
-    cmd: op item list --vault Homelab
+    cmd: op item list --vault Homelab --format json
   when: onepassword_items is undefined
   register: onepassword_items
 - name: Set onepassword items for reuse in the playbook

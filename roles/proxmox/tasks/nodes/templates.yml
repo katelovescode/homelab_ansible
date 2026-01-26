@@ -1,0 +1,8 @@
+---
+- name: Install Container templates
+  block:
+    - name: Copy Debian 12 template
+      become: true
+      ansible.builtin.copy:
+        src: roles/proxmox/files/container_templates/{{ proxmox_debian_12_vztmpl_filename }}
+        dest: /var/lib/vz/template/cache/{{ proxmox_debian_12_vztmpl_filename }}

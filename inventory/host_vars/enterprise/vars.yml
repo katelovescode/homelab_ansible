@@ -1,1 +1,29 @@
 proxmox_node_hostname: enterprise
+
+# KEYS FOR TEMPLATE HOSTS
+#
+# required
+# hostname: "{{ item.name }}"
+# vmid: "{{ item.vmid }}"
+# vztmpl_filename: "{{ item.vztmpl_filename }}"
+# ostype: "{{ item.ostype }}"
+# mac_address: "{{ item.mac_address }}"
+#
+# calculated
+# sanitized_hostname: "{{ item.name | replace('_', '-') }}"
+#
+# optional
+# cores: "{{ item.cores | default(2) }}"
+# disk_size: "{{ item.disk_size | default(20) }}" # in GiB
+# memory: "{{ item.memory | default(2148) }}" # in MB
+# start_on_boot: "{{ item.start_on_boot | default(true) }}"
+# swap: "{{ item.swap | default(512) }}"
+
+template_hosts:
+  - {
+      name: "debian12_template",
+      vmid: 999,
+      vztmpl_filename: "{{ proxmox_debian_12_vztmpl_filename }}",
+      ostype: "debian",
+      mac_address: "{{ (lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json | ansible.builtin.json_query('debian12_template')).mac }}",
+    }

@@ -4,8 +4,7 @@ proxmox_admin_api_user: "{{ proxmox_admin_username + '@' + proxmox_admin_authent
 proxmox_admin_firstname: Kate
 proxmox_vm_ct_iso_vztmpl_storage: local
 proxmox_vm_ct_disk_storage: local-lvm
-proxmox_debian_13_vztmpl_url: "http://download.proxmox.com/images/system/debian-13-standard_13.1-2_amd64.tar.zst"
-proxmox_debian_13_vztmpl_filename: "{{ (proxmox_debian_13_vztmpl_url | split('/'))[-1] }}"
+proxmox_debian_12_vztmpl_filename: debian-12-standard_12.12-1_amd64.tar.zst
 proxmox_node_ip: "{{ ansible_host }}"
 proxmox_ansible_public_key: "{{ ansible_public_key }}"
 proxmox_gateway: "{{ trusted_gateway }}"

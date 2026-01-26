@@ -1,4 +1,27 @@
 ---
+#################################
+# repos, packages, admin user
+#################################
+- ansible.builtin.import_tasks: roles/proxmox/tasks/nodes/enterprise_repos.yml
+- ansible.builtin.import_tasks: roles/proxmox/tasks/nodes/required_packages.yml
+- ansible.builtin.import_tasks: roles/proxmox/tasks/nodes/admin_user.yml
+
+- name: Get all existing containers
+  block:
+    - name: List all existing virtual machines on node of type lxc
+      community.proxmox.proxmox_vm_info:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "{{ proxmox_admin_api_user }}"
+        api_password: "{{ proxmox_admin_password }}"
+        type: lxc
+      register: container_list
+    - name: Set container list to be used in other plays
+      ansible.builtin.set_fact:
+        proxmox_containers: "{{ container_list | ansible.builtin.json_query('proxmox_vms') | map(attribute='name') }}"
+
+#################################
+# API authentication
+#################################
 - name: Request auth ticket
   ansible.builtin.uri:
     url: "https://{{ proxmox_node_ip }}:8006/api2/json/access/ticket"
@@ -11,37 +34,19 @@
         "password": "{{ proxmox_admin_password }}",
       }
   register: ticket_response
-- name: Ensure sudo is installed
-  remote_user: root
-  ansible.builtin.apt:
-    package: sudo
-- name: Handle enterprise and no-subscription repository
-  ansible.builtin.import_tasks:
-    file: enterprise_repos.yml
-- name: Required packages
-  ansible.builtin.import_tasks:
-    file: required_packages.yml
-- name: Debian favorite packages
-  ansible.builtin.import_tasks:
-    file: ../../debian/tasks/main.yml
-- name: Import admin user role
-  ansible.builtin.import_role:
-    name: admin_user
-- name: Install templates for containers
-  ansible.builtin.import_tasks:
-    file: install_templates.yml
-- name: Create HomeAssistant service account
-  ansible.builtin.import_tasks:
-    file: homeassistant_service.yml
-- name: Create Homepage service account
-  ansible.builtin.import_tasks:
-    file: homepage_service.yml
-- name: Network Configuration
-  ansible.builtin.import_tasks:
-    file: network.yml
-- name: Storage Configuration
-  ansible.builtin.import_tasks:
-    file: storage.yml
-- name: Containers
-  ansible.builtin.import_tasks:
-    file: containers.yml
+- name: Make ticket available for future plays
+  ansible.builtin.set_fact:
+    proxmox_ticket: "{{ ticket_response }}"
+
+#################################
+# Node configuration
+#################################
+- ansible.builtin.import_tasks: roles/proxmox/tasks/nodes/templates.yml
+- ansible.builtin.import_tasks: roles/proxmox/tasks/nodes/network.yml
+- ansible.builtin.import_tasks: roles/proxmox/tasks/nodes/storage.yml
+
+#################################
+# Service accounts
+#################################
+- ansible.builtin.import_tasks: roles/proxmox/tasks/service_users/homeassistant.yml
+- ansible.builtin.import_tasks: roles/proxmox/tasks/service_users/homepage.yml

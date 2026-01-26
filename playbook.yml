@@ -1,55 +1,76 @@
+# TODO: uncomment when done with initial development
+# - name: Verify ready
+#   hosts: all
+#   gather_facts: false
+#   vars_prompt:
+#     - name: ready
+#       prompt: |
+#         ---------------
+
+#           Make sure you have:
+#            - Bootstrapped every new physical device (Containers and VMs will bootstrap themselves)
+#            - Configured IPs and MAC addresses in Unifi as needed
+#                   (check secrets/mac_and_ip_addresses.json for predetermined static assignment)
+#            - Signed in to 1Password CLI in the terminal with <op signin>
+
+#           Continue? (y/N)
+#               (Anything other than "y" will cancel the run)
+
+#         ---------------
+#       private: false
+#       default: "n"
+#   tasks:
+#     - name: Fail all tasks if not ready
+#       ansible.builtin.fail:
+#         msg: "Not ready"
+#       when: not ready_to_go
+#       vars:
+#         ready_to_go: "{{ ready == 'y' or ready == 'Y'}}"
+
 - name: Get 1Password items for playbook
   hosts: localhost
   roles:
-    - 1password
+    - onepassword
 
-- name: Ansible user on all devices
-  hosts: devices
-  gather_facts: false
-  roles:
-    - ansible_user
-  handlers:
-    - name: Restart sshd
-      become: true
-      ansible.builtin.command: service ssh restart
-
-- name: Packages for Debian devices
-  hosts: debian_based
-  roles:
-    - debian
-
-- name: Proxmox node, cluster and VM management
+- name: Proxmox node, cluster management
   hosts: enterprise
   roles:
     - proxmox
 
-- name: Andromeda Raspberry Pi setup
-  hosts: andromeda
+- name: Create Proxmox Templates
+  hosts: enterprise
   roles:
-    - andromeda
-#### TODO: uncomment after primary development
-# vars_prompt:
-#   - name: logged_into_onepassword
-#     prompt: |
+    - proxmox_templates
 
-#       ---------------
+- name: Proxmox container templates bootstrap
+  gather_facts: false
+  hosts: new_container_templates
+  roles:
+    - bootstrap
 
-#       Have you run <op signin> in the terminal? (y/N)
-#             (Anything other than "y" will cancel the run)
-
-#       ---------------
-#     private: false
-#     default: "n"
-
-# tasks:
-# ### TODO: uncomment after primary development
-#   - name: End the playbook if not logged into 1Password
-#     ansible.builtin.meta: end_play
-#     when:
-#       - logged_into_onepassword != "y"
-# - name: Import Proxmox Root Role
-#   ansible.builtin.import_role:
-#     name: proxmox_root
-# - name: Import Proxmox Admin Role
-#   ansible.builtin.import_role:
-#     name: proxmox_admin
+- name: Shut down containers for cloning
+  hosts: enterprise
+  tasks:
+    - name: Turn off machine to prepare for cloning
+      community.proxmox.proxmox:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "{{ proxmox_admin_api_user }}"
+        api_password: "{{ proxmox_admin_password }}"
+        vmid: "{{ item.vmid }}"
+        state: stopped
+      loop: "{{ template_hosts }}"
+#
+# - name: Clone containers and VMs in Proxmox
+#   hosts: enterprise
+#   tasks:
+# clone the VMs/containers
+#
+# - name: Andromeda Raspberry Pi setup
+#   hosts: andromeda
+#   roles:
+#     - andromeda
+#
+# - name: Install PiHole on cluster
+#   hosts: pihole_cluster
+#   roles:
+#     - pihole

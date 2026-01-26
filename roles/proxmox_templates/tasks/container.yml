@@ -1,0 +1,65 @@
+- name: Create the container
+  community.proxmox.proxmox:
+    api_host: "{{ proxmox_node_ip }}"
+    api_user: "{{ proxmox_admin_api_user }}"
+    api_password: "{{ proxmox_admin_password }}"
+    cores: "{{ cores | default(2) }}"
+    description: "Managed by Ansible"
+    disk_volume:
+      size: "{{ disk_size | default(20) }}" # in GiB
+      storage: "{{ proxmox_vm_ct_disk_storage }}"
+    hostname: "{{ sanitized_hostname }}"
+    memory: "{{ memory | default(2148) }}" # in MB
+    netif:
+      net0: "name=eth0,ip=dhcp,bridge=vmbr0,firewall=1,hwaddr={{ mac_address }}"
+    node: "{{ proxmox_node_hostname }}"
+    onboot: "{{ start_on_boot | default(true) }}"
+    ostemplate: "{{ proxmox_vm_ct_iso_vztmpl_storage }}:vztmpl/{{ vztmpl_filename }}"
+    ostype: "{{ ostype }}"
+    pubkey: "{{ proxmox_ansible_public_key }}"
+    state: present
+    swap: "{{ swap | default(512) }}"
+    timezone: host
+    update: false
+    vmid: "{{ vmid }}"
+  register: container
+
+- name: Set console mode to shell
+  block:
+    - name: Check for cmode
+      ansible.builtin.uri:
+        url: "https://{{ proxmox_node_ip }}:8006/api2/json/nodes/{{ proxmox_node_hostname }}/lxc/{{ vmid }}/config"
+        method: GET
+        validate_certs: no
+        headers:
+          Cookie: "PVEAuthCookie={{ proxmox_ticket.json.data.ticket }}"
+          CSRFPreventionToken: "{{ proxmox_ticket.json.data.CSRFPreventionToken }}"
+      register: container_config
+    - name: Set cmode if it's not shell
+      ansible.builtin.uri:
+        url: "https://{{ proxmox_node_ip }}:8006/api2/json/nodes/{{ proxmox_node_hostname }}/lxc/{{ vmid }}/config"
+        method: PUT
+        validate_certs: no
+        headers:
+          Cookie: "PVEAuthCookie={{ proxmox_ticket.json.data.ticket }}"
+          CSRFPreventionToken: "{{ proxmox_ticket.json.data.CSRFPreventionToken }}"
+        body_format: json
+        body: { "cmode": "shell" }
+      when: cmode_not_shell
+  vars:
+    cmode_not_shell: "{{ (container_config.json.data | ansible.builtin.json_query('cmode')) == None or container_config.json.data.cmode != 'shell' }}"
+
+- name: Start up the container and add to new_container_templates group if this is a new instance
+  block:
+    - name: Start the container
+      community.proxmox.proxmox:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "{{ proxmox_admin_api_user }}"
+        api_password: "{{ proxmox_admin_password }}"
+        vmid: "{{ vmid }}"
+        state: started
+    - name: Add container to group
+      ansible.builtin.add_host:
+        name: "{{ hostname }}"
+        group: new_container_templates
+  when: sanitized_hostname not in hostvars['enterprise']['proxmox_containers']

@@ -1,0 +1,26 @@
+---
+- name: Create container templates
+  ansible.builtin.include_tasks:
+    file: "roles/proxmox_templates/tasks/container.yml"
+  loop: "{{ hostvars['enterprise']['template_hosts'] }}"
+  vars:
+    #
+    # required in host definition
+    #
+    hostname: "{{ item.name }}"
+    vmid: "{{ item.vmid }}"
+    vztmpl_filename: "{{ item.vztmpl_filename }}"
+    ostype: "{{ item.ostype }}"
+    mac_address: "{{ item.mac_address }}"
+    #
+    # calculated
+    #
+    sanitized_hostname: "{{ item.name | replace('_', '-') }}"
+    #
+    # optional
+    #
+    cores: "{{ item.cores | default(2) }}"
+    disk_size: "{{ item.disk_size | default(20) }}" # in GiB
+    memory: "{{ item.memory | default(2148) }}" # in MB
+    start_on_boot: "{{ item.start_on_boot | default(true) }}"
+    swap: "{{ item.swap | default(512) }}"

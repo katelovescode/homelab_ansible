@@ -1,0 +1,5 @@
+- name: Bootstrap all devices
+  hosts: all
+  gather_facts: false
+  roles:
+    - bootstrap

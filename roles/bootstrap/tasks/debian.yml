@@ -1,11 +1,12 @@
 ---
-- name: Ensure pip is installed
+- name: Update packages
   become: true
   ansible.builtin.apt:
-    package: python3-pip
     update_cache: true
-- name: Ensure proxmoxer is installed
+    upgrade: "yes"
+  ignore_errors: true
+- name: Ensure vim is installed
   become: true
   ansible.builtin.apt:
-    package: python3-proxmoxer
+    package: vim
     update_cache: true
