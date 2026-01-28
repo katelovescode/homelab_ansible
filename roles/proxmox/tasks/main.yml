@@ -17,7 +17,7 @@
       register: container_list
     - name: Set container list to be used in other plays
       ansible.builtin.set_fact:
-        proxmox_containers: "{{ container_list | ansible.builtin.json_query('proxmox_vms') | map(attribute='name') }}"
+        existing_containers: "{{ container_list | ansible.builtin.json_query('proxmox_vms') }}"
 
 #################################
 # API authentication

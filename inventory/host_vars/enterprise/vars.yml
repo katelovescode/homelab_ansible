@@ -9,8 +9,8 @@ proxmox_node_hostname: enterprise
 # ostype: "{{ item.ostype }}"
 #
 # calculated
-# sanitized_hostname: "{{ item.name | replace('_', '-') }}"
-# template_host_record: "{{ lookup('ansible.builtin.file', (inventory_dir ~ '/secrets/mac_and_ip_addresses.json')) | ansible.builtin.from_json | ansible.builtin.json_query(hostname) }}"
+# container_name: "{{ item.name | replace('_', '-') }}"
+# template_host_record: "{{ host_addresses | ansible.builtin.json_query(hostname) }}"
 # mac_address: "{{ template_host_record.mac }}"
 # ip_address: "{{ template_host_record.ip }}"
 #
@@ -36,8 +36,8 @@ template_hosts:
 # clone_vmid: 999
 #
 # calculated
-# sanitized_hostname: "{{ item.name | replace('_', '-') }}"
-# clone_host_record: "{{ lookup('ansible.builtin.file', (inventory_dir ~ '/secrets/mac_and_ip_addresses.json')) | ansible.builtin.from_json | ansible.builtin.json_query(hostname) }}"
+# container_name: "{{ item.name | replace('_', '-') }}"
+# clone_host_record: "{{ host_addresses | ansible.builtin.json_query(hostname) }}"
 # mac_address: "{{ clone_host_record.mac }}"
 # ip_address: "{{ clone_host_record.ip }}"
 

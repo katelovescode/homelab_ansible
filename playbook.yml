@@ -29,9 +29,12 @@
 
 - name: Ensure known_hosts is configured for all devices
   gather_facts: false
-  hosts: devices
-  roles:
-    - ssh_known_hosts
+  hosts: localhost
+  tasks:
+    - ansible.builtin.include_tasks: roles/ssh_known_hosts/tasks/main.yml
+      loop: "{{ groups['devices'] }}"
+      vars:
+        ansible_host: "{{ hostvars[item].ansible_host }}"
 
 - name: Get 1Password items for playbook
   hosts: localhost
@@ -48,13 +51,34 @@
   roles:
     - proxmox_templates
 
+- name: SSH known_hosts for existing templates and new templates
+  gather_facts: false
+  hosts: localhost
+  tasks:
+    - ansible.builtin.include_tasks: roles/ssh_known_hosts/tasks/main.yml
+      loop: "{{ template_hostnames }}"
+      vars:
+        template_hostnames: "{{ hostvars['enterprise']['template_hosts'] | map(attribute='name') }}"
+        ansible_host: "{{ hostvars[item].ansible_host }}"
+        container_name: "{{ item | replace('_', '-') }}"
+        existing_info: "{{ hostvars['enterprise']['existing_containers'] | selectattr('name','==',container_name) }}"
+        pre_existing: "{{ existing_info | length == 1 }}"
+        existing_container_status: "{{ existing_info[0]['status'] if pre_existing else None }}"
+        new_info: "{{ hostvars[item] }}"
+        new_info_existing: "{{ 'container_info' in hostvars[item] }}"
+        new_info_status_present: "{{ 'status' in hostvars[item]['container_info'] if new_info_existing else None }}"
+        new_container_status: "{{ hostvars[item]['container_info']['status'] if new_info_status_present else None }}"
+        container_status: "{{ new_container_status or existing_container_status or None }}"
+        container_exists: "{{ pre_existing or new_info_existing }}"
+      when: container_exists and container_status != "stopped"
+
 - name: Proxmox container templates bootstrap
   gather_facts: false
   hosts: new_container_templates
   roles:
     - bootstrap
 
-- name: Shut down containers for cloning
+- name: Shut down templates for cloning
   hosts: enterprise
   tasks:
     - name: Turn off machine to prepare for cloning
@@ -71,10 +95,14 @@
   roles:
     - proxmox_containers
 
-- name: Set up SSH on containers
-  hosts: containers
-  roles:
-    - ssh_known_hosts
+- name: Set up SSH known_hosts for cloned containers
+  gather_facts: false
+  hosts: localhost
+  tasks:
+    - ansible.builtin.include_tasks: roles/ssh_known_hosts/tasks/main.yml
+      loop: "{{ hostvars['enterprise']['container_clone_hosts'] }}"
+      vars:
+        ansible_host: "{{ hostvars[item.name].ansible_host }}"
 
 - name: Update packages on running devices
   gather_facts: false
@@ -85,21 +113,16 @@
       ansible.builtin.apt:
         update_cache: true
         upgrade: "yes"
-# - name: Clone containers and VMs in Proxmox
-#   hosts: enterprise
-#   tasks:
-# clone the VMs/containers
-#
+
 - name: Andromeda Raspberry Pi setup
   hosts: andromeda
   roles:
     - andromeda
-#
+# #
 # - name: Install PiHole on cluster
 #   hosts: pihole_cluster
 #   roles:
 #     - pihole
-
 #
 # - name: Debug
 #   hosts: centaurus

@@ -1,0 +1,79 @@
+- name: Verify ready
+  hosts: localhost
+  gather_facts: false
+  vars_prompt:
+    - name: ready
+      prompt: |
+        ---------------
+
+            This will destroy all containers and VMs on Proxmox!
+
+                                                                                                                     
+             █████╗ ██████╗ ███████╗    ██╗   ██╗ ██████╗ ██╗   ██╗    ███████╗██╗   ██╗██████╗ ███████╗
+            ██╔══██╗██╔══██╗██╔════╝    ╚██╗ ██╔╝██╔═══██╗██║   ██║    ██╔════╝██║   ██║██╔══██╗██╔════╝
+            ███████║██████╔╝█████╗       ╚████╔╝ ██║   ██║██║   ██║    ███████╗██║   ██║██████╔╝█████╗  
+            ██╔══██║██╔══██╗██╔══╝        ╚██╔╝  ██║   ██║██║   ██║    ╚════██║██║   ██║██╔══██╗██╔══╝  
+            ██║  ██║██║  ██║███████╗       ██║   ╚██████╔╝╚██████╔╝    ███████║╚██████╔╝██║  ██║███████╗
+            ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝       ╚═╝    ╚═════╝  ╚═════╝     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
+                                                                                                        
+        ---------------
+      private: false
+      default: "n"
+  tasks:
+    - name: Fail all tasks if not ready
+      ansible.builtin.fail:
+        msg: "Not ready"
+      when: not ready_to_go
+      vars:
+        ready_to_go: "{{ ready == 'y' or ready == 'Y'}}"
+
+- name: Destroy VMs and remove SSH keys from local
+  gather_facts: false
+  hosts: enterprise
+  tasks:
+    - name: SSH Removal
+      delegate_to: localhost
+      ansible.builtin.known_hosts:
+        name: "{{ ip_address }}"
+        state: absent
+      loop: "{{ vms_to_destroy | split(',') }}"
+      ignore_errors: true
+      vars:
+        container_host_record: "{{ lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json | ansible.builtin.json_query(item) }}"
+        mac_address: "{{ container_host_record.mac }}"
+        ip_address: "{{ container_host_record.ip }}"
+        ansible_host: "{{ ip_address }}"
+    - name: Get Container IDs
+      community.proxmox.proxmox_vm_info:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "{{ proxmox_admin_api_user }}"
+        api_password: "{{ proxmox_admin_password }}"
+        node: "{{ proxmox_node_hostname }}"
+        type: lxc
+      register: containers
+    - name: Stop containers
+      community.proxmox.proxmox:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "{{ proxmox_admin_api_user }}"
+        api_password: "{{ proxmox_admin_password }}"
+        vmid: "{{ vmid }}"
+        state: stopped
+      loop: "{{ vms_to_destroy | split(',') }}"
+      when: vmid != None
+      vars:
+        container_record: "{{ (containers.proxmox_vms | ansible.builtin.selectattr('name','==',(item | replace('_','-')))) }}"
+        container_exists: "{{ container_record | length == 1 }}"
+        vmid: "{{ container_record | first | ansible.builtin.json_query('vmid') if container_exists else None }}"
+    - name: Destroy containers
+      community.proxmox.proxmox:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "{{ proxmox_admin_api_user }}"
+        api_password: "{{ proxmox_admin_password }}"
+        vmid: "{{ vmid }}"
+        state: absent
+      loop: "{{ vms_to_destroy | split(',') }}"
+      when: vmid != None
+      vars:
+        container_record: "{{ (containers.proxmox_vms | ansible.builtin.selectattr('name','==',(item | replace('_','-')))) }}"
+        container_exists: "{{ container_record | length == 1 }}"
+        vmid: "{{ container_record | first | ansible.builtin.json_query('vmid') if container_exists else None }}"
