@@ -1,34 +1,41 @@
 ---
 - name: Enable ansible user authentication
   remote_user: "{{ root_user }}"
-  become: true
-  become_user: root
   block:
     - name: Ensure sudo is installed
       ansible.builtin.apt:
         package: sudo
     - name: Create sudoers.d directory
+      become: true
+      become_user: root
       ansible.builtin.file:
         path: "/etc/sudoers.d"
         state: directory
         mode: "0600"
     - name: Create ansible user
+      become: true
+      become_user: root
       ansible.builtin.user:
         name: ansible
         uid: 10001
         shell: "/bin/bash"
     - name: Grant ansible password-less sudo
+      become: true
+      become_user: root
       ansible.builtin.copy:
         src: roles/bootstrap/files/sudoers
         dest: /etc/sudoers.d/ansible
         mode: "0600"
     - name: Authorize SSH key for ansible user
+      become: true
+      become_user: root
       ansible.posix.authorized_key:
         user: "ansible"
         key: "{{ ansible_public_key }}"
         state: present
     - name: Disable password authentication
       become: true
+      become_user: root
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
         regex: "^(# *)?PasswordAuthentication"

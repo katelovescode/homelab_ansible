@@ -1,3 +1,4 @@
+---
 - name: Create the container
   community.proxmox.proxmox:
     api_host: "{{ proxmox_node_ip }}"
@@ -8,7 +9,7 @@
     disk_volume:
       size: "{{ disk_size | default(20) }}" # in GiB
       storage: "{{ proxmox_vm_ct_disk_storage }}"
-    hostname: "{{ sanitized_hostname }}"
+    hostname: "{{ container_name }}"
     memory: "{{ memory | default(2148) }}" # in MB
     netif:
       net0: "name=eth0,ip=dhcp,bridge=vmbr0,firewall=1,hwaddr={{ mac_address }}"
@@ -58,8 +59,17 @@
         api_password: "{{ proxmox_admin_password }}"
         vmid: "{{ vmid }}"
         state: started
+      register: container_started
+    - name: Get container info
+      community.proxmox.proxmox_vm_info:
+        api_host: "{{ proxmox_node_ip }}"
+        api_user: "{{ proxmox_admin_api_user }}"
+        api_password: "{{ proxmox_admin_password }}"
+        vmid: "{{ vmid }}"
+      register: container_info
     - name: Add container to group
       ansible.builtin.add_host:
         name: "{{ hostname }}"
         group: new_container_templates
-  when: sanitized_hostname not in hostvars['enterprise']['proxmox_containers']
+        container_info: "{{ container_info['proxmox_vms'][0] }}"
+  when: container_name not in (hostvars['enterprise']['existing_containers'] | map(attribute='name'))
