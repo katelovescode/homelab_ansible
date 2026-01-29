@@ -9,8 +9,6 @@
 
 #           Make sure you have:
 #            - Bootstrapped every new physical device (Containers and VMs will bootstrap themselves)
-#            - Configured IPs and MAC addresses in Unifi as needed
-#                   (check secrets/mac_and_ip_addresses.json for predetermined static assignment)
 #            - Signed in to 1Password CLI in the terminal with <op signin>
 
 #           Continue? (y/N)
@@ -118,29 +116,3 @@
   hosts: andromeda
   roles:
     - andromeda
-# #
-# - name: Install PiHole on cluster
-#   hosts: pihole_cluster
-#   roles:
-#     - pihole
-#
-# - name: Debug
-#   hosts: centaurus
-#   tasks:
-#     - name: TEST DEBUG
-#       remote_user: "{{ root_user }}"
-#       ignore_unreachable: true
-#       ansible.builtin.ping:
-#       register: root_connection
-
-#     - name: Attempt connection as ansible
-#       ignore_unreachable: true
-#       ansible.builtin.ping:
-#       register: ansible_connection
-
-#     - name: Debug root
-#       delegate_to: localhost
-#       ansible.builtin.debug:
-#         var: root_connection | ansible.builtin.json_query('unreachable') == true
-#       ignore_errors: true
-#       # when: root_connection.unreachable == true

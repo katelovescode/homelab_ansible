@@ -1,6 +1,3 @@
 ansible_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL668QvqA1W8UhzAPYysO8i/BLvONM9W4tYgvJ2OBJHG kate@510forward.space"
 trusted_gateway: 192.168.30.1
 root_user: root
-host_addresses: "{{ (lookup('ansible.builtin.file', 'secrets/mac_and_ip_addresses.json') | ansible.builtin.from_json) }}"
-ansible_host: "{{ host_addresses[inventory_hostname]['ip'] }}"
-mac_address: "{{ host_addresses[inventory_hostname]['mac'] }}"

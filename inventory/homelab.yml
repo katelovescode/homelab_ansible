@@ -7,16 +7,11 @@ debian_based:
     enterprise:
     andromeda:
     debian12_template:
-    centaurus:
 
 devices:
   hosts:
     enterprise:
     andromeda:
-
-containers:
-  hosts:
-    centaurus:
 
 container_templates:
   hosts:

@@ -32,7 +32,7 @@ template_hosts:
 # KEYS FOR CLONE HOSTS
 #
 # required
-# name: "centaurus"
+# name: "name"
 # clone_vmid: 999
 #
 # calculated
@@ -42,4 +42,4 @@ template_hosts:
 # ip_address: "{{ clone_host_record.ip }}"
 
 container_clone_hosts:
-  - { name: "centaurus", clone_vmid: 999 }
+  - { name: "name", clone_vmid: 999 }
